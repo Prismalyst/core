@@ -7,6 +7,7 @@ import {
 
 import { noFloatingPrismaPromise } from './list/no-floating-prisma-promise.js';
 import { noUnsafeRawSQL } from './list/no-unsafe-raw-sql.js';
+import { requireWhereDeleteMany } from './list/require-where-delete-many.js';
 
 export const RULES_LIST: Rule[] = [
   {
@@ -44,5 +45,23 @@ export const RULES_LIST: Rule[] = [
     },
     methods: [...PRISMA_METHODS],
     function: noFloatingPrismaPromise,
+  },
+  {
+    name: 'require-where-delete-many',
+    messageId: 'requireWhereDeleteMany',
+    meta: {
+      type: 'problem',
+      docs: {
+        description: 'Require "where" for deleteMany',
+        recommended: true,
+        requiresTypeChecking: true,
+      },
+      messages: {
+        requireWhereDeleteMany: '"where" is required for deleteMany',
+      },
+      schema: [],
+    },
+    methods: ['deleteMany'],
+    function: requireWhereDeleteMany,
   },
 ];
