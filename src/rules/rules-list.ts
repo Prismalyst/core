@@ -8,6 +8,7 @@ import {
 import { noFloatingPrismaPromise } from './list/no-floating-prisma-promise.js';
 import { noUnsafeRawSQL } from './list/no-unsafe-raw-sql.js';
 import { requireWhereDeleteMany } from './list/require-where-delete-many.js';
+import { requireWhereUpdateMany } from './list/require-where-update-many.js';
 
 export const RULES_LIST: Rule[] = [
   {
@@ -63,5 +64,23 @@ export const RULES_LIST: Rule[] = [
     },
     methods: ['deleteMany'],
     function: requireWhereDeleteMany,
+  },
+  {
+    name: 'require-where-update-many',
+    messageId: 'requireWhereUpdateMany',
+    meta: {
+      type: 'problem',
+      docs: {
+        description: 'Require "where" for updateMany',
+        recommended: true,
+        requiresTypeChecking: true,
+      },
+      messages: {
+        requireWhereUpdateMany: '"where" is required for updateMany',
+      },
+      schema: [],
+    },
+    methods: ['updateMany'],
+    function: requireWhereUpdateMany,
   },
 ];
