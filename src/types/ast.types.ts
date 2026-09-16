@@ -6,3 +6,10 @@ export type AstObject = {
 
 export type AstValue =
   AstObject | string | number | boolean | null | undefined | AstValue[] | TS.Expression;
+
+export type AstKind = "template"
+
+export type NormalizedAstNode = {
+  kind: AstKind;
+  raw: string;
+};

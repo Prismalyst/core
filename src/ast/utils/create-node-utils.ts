@@ -87,6 +87,13 @@ export function createNodeUtils(ts: typeof TS) {
       }
     }
 
+    if (ts.isTemplateExpression(node)) {
+      return {
+        kind: 'template',
+        raw: node.getText(),
+      };
+    }
+
     // id
     // user.id
     // getWhere()
