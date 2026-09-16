@@ -11,6 +11,7 @@ import { noFloatingPrismaPromise } from './list/no-floating-prisma-promise.js';
 import { noUnsafeRawSQL } from './list/no-unsafe-raw-sql.js';
 import { requireWhereDeleteMany } from './list/require-where-delete-many.js';
 import { requireWhereUpdateMany } from './list/require-where-update-many.js';
+import { noQueryInLoop } from './list/no-query-in-loop.js';
 
 export const RULES_LIST: Rule[] = [
   {
@@ -102,5 +103,23 @@ export const RULES_LIST: Rule[] = [
     },
     methods: ['updateMany'],
     function: requireWhereUpdateMany,
+  },
+  {
+    name: 'no-query-in-loop',
+    messageId: 'noQueryInLoop',
+    meta: {
+      type: 'problem',
+      docs: {
+        description: 'Disallow Prisma queries inside a loop',
+        recommended: true,
+        requiresTypeChecking: true,
+      },
+      messages: {
+        noQueryInLoop: 'Prisma query inside a loop may cause an N+1 query pattern',
+      },
+      schema: [],
+    },
+    methods: [...PRISMA_METHODS],
+    function: noQueryInLoop,
   },
 ];
