@@ -2,7 +2,6 @@ import { Rule } from '../types/rule.eslint.types.js';
 
 import {
   PRISMA_METHODS,
-  PRISMA_SQL_METHODS,
   PRISMA_UNSAFE_SQL_METHODS,
 } from '../constants/prisma-methods.constants.js';
 
@@ -25,7 +24,8 @@ export const RULES_LIST: Rule[] = [
         requiresTypeChecking: true,
       },
       messages: {
-        noUnsafeRawSQL: 'Unsafe raw SQL detected',
+        noUnsafeRawSQL:
+          'Unsafe raw-query API requires explicit review, prefer TypedSQL or tagged templates',
       },
       schema: [],
     },
@@ -61,7 +61,8 @@ export const RULES_LIST: Rule[] = [
         requiresTypeChecking: true,
       },
       messages: {
-        noFloatingPrismaPromise: 'Floating Prisma promise detected',
+        noFloatingPrismaPromise:
+          'Prisma query promise must be awaited, returned, or otherwise handled',
       },
       schema: [],
     },
@@ -79,7 +80,7 @@ export const RULES_LIST: Rule[] = [
         requiresTypeChecking: true,
       },
       messages: {
-        requireWhereDeleteMany: '"where" is required for deleteMany',
+        requireWhereDeleteMany: 'deleteMany() without "where" deletes every record',
       },
       schema: [],
     },
@@ -97,7 +98,7 @@ export const RULES_LIST: Rule[] = [
         requiresTypeChecking: true,
       },
       messages: {
-        requireWhereUpdateMany: '"where" is required for updateMany',
+        requireWhereUpdateMany: 'updateMany() without "where" updates every record',
       },
       schema: [],
     },
