@@ -2,9 +2,11 @@ import { Rule } from '../types/rule.eslint.types.js';
 
 import {
   PRISMA_METHODS,
+  PRISMA_SQL_METHODS,
   PRISMA_UNSAFE_SQL_METHODS,
 } from '../constants/prisma-methods.constants.js';
 
+import { noDynamicRawQuery } from './list/no-dynamic-raw-query.js';
 import { noFloatingPrismaPromise } from './list/no-floating-prisma-promise.js';
 import { noUnsafeRawSQL } from './list/no-unsafe-raw-sql.js';
 import { requireWhereDeleteMany } from './list/require-where-delete-many.js';
@@ -28,6 +30,24 @@ export const RULES_LIST: Rule[] = [
     },
     methods: [...PRISMA_UNSAFE_SQL_METHODS],
     function: noUnsafeRawSQL,
+  },
+  {
+    name: 'no-dynamic-raw-query',
+    messageId: 'noDynamicRawQuery',
+    meta: {
+      type: 'problem',
+      docs: {
+        description: 'Disallow dynamic raw query',
+        recommended: true,
+        requiresTypeChecking: true,
+      },
+      messages: {
+        noDynamicRawQuery: 'Dynamic raw query detected',
+      },
+      schema: [],
+    },
+    methods: [...PRISMA_SQL_METHODS],
+    function: noDynamicRawQuery,
   },
   {
     name: 'no-floating-prisma-promise',
