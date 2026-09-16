@@ -3,7 +3,6 @@ import type * as TS from 'typescript';
 import { PrismaCall } from '../../types/prisma.types.js';
 
 import { createAstUtils } from '../utils/create-ast-utils.js';
-
 import { isPrismaCall } from './utils/is-prisma-call.js';
 
 type CreateTsAstOptions = {
@@ -45,16 +44,18 @@ export async function getPrismaCalls({
 
       const args = node.arguments;
 
-      const isFloating = prismaUtils.isFloatingPrismaPromise(node.parent);
+      const isFloatingPrismaPromise = prismaUtils.isFloatingPrismaPromise(node.parent);
       const isCallInsideTransaction = prismaUtils.isInsidePrismaTransaction(node);
+      const isCallInsideLoop = prismaUtils.isInsideLoop(node);
 
       calls.push({
         node: node,
         method,
         args: args.map((_, index) => nodeUtils.parseArgument(node, index)),
         prisma: {
-          isFloatingPrismaPromise: isFloating,
+          isFloatingPrismaPromise,
           isCallInsideTransaction,
+          isCallInsideLoop,
         },
         range: {
           start: {

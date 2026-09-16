@@ -11,6 +11,7 @@ export type PrismaCall = {
   prisma: {
     isFloatingPrismaPromise: boolean;
     isCallInsideTransaction: boolean;
+    isCallInsideLoop: boolean;
   };
   range: {
     start: {

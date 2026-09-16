@@ -21,16 +21,18 @@ export function convertToPrismaCall(
 
   const args = node.arguments;
 
-  const isFloating = prismaUtils.isFloatingPrismaPromise(node.parent);
-  const isInsideTransaction = prismaUtils.isInsidePrismaTransaction(node);
+  const isFloatingPrismaPromise = prismaUtils.isFloatingPrismaPromise(node.parent);
+  const isCallInsideTransaction = prismaUtils.isInsidePrismaTransaction(node);
+  const isCallInsideLoop = prismaUtils.isInsideLoop(node);
 
   return {
     node: node,
     method,
     args: args.map((_, index) => nodeUtils.parseArgument(node, index)),
     prisma: {
-      isFloatingPrismaPromise: isFloating,
-      isCallInsideTransaction: isInsideTransaction,
+      isFloatingPrismaPromise,
+      isCallInsideTransaction,
+      isCallInsideLoop,
     },
     range: {
       start: {
