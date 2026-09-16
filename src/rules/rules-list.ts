@@ -8,10 +8,10 @@ import {
 
 import { noDynamicRawQuery } from './list/no-dynamic-raw-query.js';
 import { noFloatingPrismaPromise } from './list/no-floating-prisma-promise.js';
+import { noQueryInLoop } from './list/no-query-in-loop.js';
 import { noUnsafeRawSQL } from './list/no-unsafe-raw-sql.js';
 import { requireWhereDeleteMany } from './list/require-where-delete-many.js';
 import { requireWhereUpdateMany } from './list/require-where-update-many.js';
-import { noQueryInLoop } from './list/no-query-in-loop.js';
 
 export const RULES_LIST: Rule[] = [
   {
@@ -43,11 +43,11 @@ export const RULES_LIST: Rule[] = [
         requiresTypeChecking: true,
       },
       messages: {
-        noDynamicRawQuery: 'Dynamic raw query detected',
+        noDynamicRawQuery: 'Dynamic value is interpolated into unsafe raw SQL',
       },
       schema: [],
     },
-    methods: [...PRISMA_SQL_METHODS],
+    methods: [...PRISMA_UNSAFE_SQL_METHODS],
     function: noDynamicRawQuery,
   },
   {
