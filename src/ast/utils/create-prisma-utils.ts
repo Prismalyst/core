@@ -12,11 +12,18 @@ export function createPrismaUtils(ts: typeof TS) {
     });
   }
 
-  function isFloatingPrismaPromise(parent: TS.Node) {
+  function isFloatingPrismaPromise(
+    node: TS.Node,
+    parent: TS.Node,
+    checker: TS.TypeChecker,
+  ): boolean {
     const isAwaited = ts.isAwaitExpression(parent);
     const isReturnStatement = ts.isReturnStatement(parent);
 
-    const isFloating = !isAwaited && !isReturnStatement;
+    const type = checker.getTypeAtLocation(node);
+    const isPromise = checker.getPropertyOfType(type, 'then') !== undefined;
+
+    const isFloating = isPromise && !isAwaited && !isReturnStatement;
 
     return isFloating;
   }

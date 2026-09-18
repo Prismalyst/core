@@ -1,9 +1,12 @@
+import type * as TS from 'typescript';
+
 import { PrismaCall, PrismaCallExpression } from '../../../types/prisma.types.js';
 
 import { AstUtils } from '../../utils/create-ast-utils.js';
 
 export function convertToPrismaCall(
   node: PrismaCallExpression,
+  program: TS.Program,
   { node: nodeUtils, prisma: prismaUtils }: AstUtils,
 ): PrismaCall {
   const methodNode = node.expression.name;
@@ -21,7 +24,9 @@ export function convertToPrismaCall(
 
   const args = node.arguments;
 
-  const isFloatingPrismaPromise = prismaUtils.isFloatingPrismaPromise(node.parent);
+  const checker = program.getTypeChecker();
+
+  const isFloatingPrismaPromise = prismaUtils.isFloatingPrismaPromise(node, node.parent, checker);
   const isCallInsideTransaction = prismaUtils.isInsidePrismaTransaction(node);
   const isCallInsideLoop = prismaUtils.isInsideLoop(node);
 
