@@ -37,6 +37,8 @@ export const PRISMA_SQL_METHODS = new Set([
 
 export const PRISMA_TRANSACTION_METHODS = new Set(['$transaction']);
 
+export const PRISMA_SQL_HELPERS = new Set(['raw', 'sql', 'join', 'empty']);
+
 export const PRISMA_METHODS = new Set([
   ...PRISMA_CREATE_METHODS,
   ...PRISMA_READ_METHODS,
@@ -45,4 +47,5 @@ export const PRISMA_METHODS = new Set([
   ...PRISMA_AGGREGATE_METHODS,
   ...PRISMA_SQL_METHODS,
   ...PRISMA_TRANSACTION_METHODS,
+  ...PRISMA_SQL_HELPERS,
 ]);
