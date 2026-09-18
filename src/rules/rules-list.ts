@@ -6,6 +6,7 @@ import {
   PRISMA_UNSAFE_SQL_METHODS,
 } from '../constants/prisma-methods.constants.js';
 
+import { maxTake } from './list/max-take.js';
 import { noDynamicRawQuery } from './list/no-dynamic-raw-query.js';
 import { noFloatingPrismaPromise } from './list/no-floating-prisma-promise.js';
 import { noQueryInLoop } from './list/no-query-in-loop.js';
@@ -142,5 +143,24 @@ export const RULES_LIST: Rule[] = [
     },
     methods: [...PRISMA_METHODS],
     function: noQueryInLoop,
+  },
+  {
+    name: 'max-take',
+    messageId: 'maxTake',
+    meta: {
+      type: 'suggestion',
+      docs: {
+        description: 'Enforce maximum "take" value',
+        recommended: true,
+        requiresTypeChecking: true,
+      },
+      messages: {
+        // TODO: make this configurable
+        maxTake: '"take" exceeds the configured maximum of {{max}} or is missing',
+      },
+      schema: [],
+    },
+    methods: ['findMany'],
+    function: maxTake,
   },
 ];
