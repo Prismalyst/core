@@ -65,6 +65,18 @@ export function createNodeUtils(ts: typeof TS) {
       return Number(node.text);
     }
 
+    if (ts.isPrefixUnaryExpression(node) && ts.isNumericLiteral(node.operand)) {
+      const value = Number(node.operand.text);
+
+      if (node.operator === ts.SyntaxKind.MinusToken) {
+        return -value;
+      }
+
+      if (node.operator === ts.SyntaxKind.PlusToken) {
+        return value;
+      }
+    }
+
     if (node.kind === ts.SyntaxKind.TrueKeyword) {
       return true;
     }
