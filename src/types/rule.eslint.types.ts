@@ -1,20 +1,10 @@
 import { PrismaCall } from './prisma.types.js';
 
-export type RuleSeverity = 'problem' | 'suggestion' | 'layout';
+// TODO: Make this more generic
+export type RuleOptions = Readonly<Record<string, unknown>>;
 
 export type Rule = {
   name: string;
-  messageId: string;
-  meta: {
-    type: RuleSeverity;
-    docs: {
-      description: string;
-      recommended: boolean;
-      requiresTypeChecking: boolean;
-    };
-    messages: Record<string, string>;
-    schema: never[];
-  };
   methods: string[];
-  function: (prismaCall: PrismaCall, rule: Rule) => boolean;
+  function: (prismaCall: PrismaCall, rule: Rule, options: RuleOptions) => boolean;
 };
