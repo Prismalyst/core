@@ -9,8 +9,6 @@ export function maxTake(caller: PrismaCall, rule: Rule) {
 
   if (!isRuleMethod) return false;
 
-  if (caller.args.length === 0) return true;
-
   const firstArg = caller.args[0] as Record<string, unknown>;
 
   if (firstArg === undefined) return true;

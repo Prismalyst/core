@@ -14,9 +14,7 @@ function isTemplateNode(value: unknown): value is NormalizedAstNode {
 }
 
 export function noDynamicRawQuery(caller: PrismaCall, rule: Rule): boolean {
-  if (!rule.methods.includes(caller.method)) {
-    return false;
-  }
+  if (!rule.methods.includes(caller.method)) return false;
 
   return isTemplateNode(caller.args[0]);
 }

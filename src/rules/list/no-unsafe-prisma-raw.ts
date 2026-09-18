@@ -6,9 +6,9 @@ export function noUnsafePrismaRaw(caller: PrismaCall, rule: Rule) {
 
   if (!isRuleMethod) return false;
 
-  if (caller.args.length === 0) return false;
-
   const firstArg = caller.args[0];
+
+  if (firstArg === undefined) return false;
 
   if (typeof firstArg === 'string') return false;
 
