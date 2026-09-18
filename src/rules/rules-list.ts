@@ -14,6 +14,7 @@ import { noUnsafePrismaRaw } from './list/no-unsafe-prisma-raw.js';
 import { noUnsafeRawSQL } from './list/no-unsafe-raw-sql.js';
 import { requireWhereDeleteMany } from './list/require-where-delete-many.js';
 import { requireWhereUpdateMany } from './list/require-where-update-many.js';
+import { noDeepOffsetPagination } from './list/no-deep-offset-pagination.js';
 
 export const RULES_LIST: Rule[] = [
   {
@@ -162,5 +163,24 @@ export const RULES_LIST: Rule[] = [
     },
     methods: ['findMany'],
     function: maxTake,
+  },
+  {
+    name: 'no-deep-offset-pagination',
+    messageId: 'noDeepOffsetPagination',
+    meta: {
+      type: 'suggestion',
+      docs: {
+        description: 'Disallow deep offset pagination',
+        recommended: true,
+        requiresTypeChecking: true,
+      },
+      messages: {
+        // TODO: make this configurable
+        noDeepOffsetPagination: 'Large offset pagination is expensive, consider cursor pagination',
+      },
+      schema: [],
+    },
+    methods: ['findMany'],
+    function: noDeepOffsetPagination,
   },
 ];
