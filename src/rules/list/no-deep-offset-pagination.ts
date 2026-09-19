@@ -10,8 +10,6 @@ export function noDeepOffsetPagination(caller: PrismaCall, rule: Rule, options: 
 
   if (firstArg === undefined) return false;
 
-  console.log('first arg:', firstArg);
-
   if (typeof firstArg !== 'object') return false;
 
   if (firstArg.skip === undefined) return false;
