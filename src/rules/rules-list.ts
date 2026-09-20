@@ -10,6 +10,7 @@ import { maxTake } from './list/max-take.js';
 import { noDeepOffsetPagination } from './list/no-deep-offset-pagination.js';
 import { noDynamicRawQuery } from './list/no-dynamic-raw-query.js';
 import { noFloatingPrismaPromise } from './list/no-floating-prisma-promise.js';
+import { noPrismaClientInFunction } from './list/no-prisma-client-in-function.js';
 import { noQueryInLoop } from './list/no-query-in-loop.js';
 import { noUnsafePrismaRaw } from './list/no-unsafe-prisma-raw.js';
 import { noUnsafeRawSQL } from './list/no-unsafe-raw-sql.js';
@@ -70,5 +71,11 @@ export const RULES_LIST: Rule[] = [
     astType: 'callExpression',
     methods: ['findMany'],
     function: noDeepOffsetPagination,
+  },
+  {
+    name: 'no-prisma-client-in-function',
+    astType: 'newExpression',
+    methods: [],
+    function: noPrismaClientInFunction,
   },
 ];
