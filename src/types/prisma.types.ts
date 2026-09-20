@@ -22,12 +22,14 @@ export type PrismaExpression = {
     length: number;
   };
   filename: string;
-  prisma: {
-    isFloatingPrismaPromise: boolean;
-    isExpressionInsideTransaction: boolean;
+  expressionContext: {
     isExpressionInsideLoop: boolean;
     isExpressionInsideFunction: boolean;
     isExpressionInsideClassMethod: boolean;
+  };
+  prismaContext: {
+    isFloatingPrismaPromise: boolean;
+    isExpressionInsideTransaction: boolean;
   };
   method: string;
   args: unknown[];
