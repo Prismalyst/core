@@ -31,6 +31,7 @@ export function convertToPrismaExpression(
   const isExpressionInsideLoop = nodeUtils.isInsideLoop(node);
   const isExpressionInsideFunction = nodeUtils.isInsideFunction(node);
   const isExpressionInsideClassMethod = nodeUtils.isInsideClassMethod(node);
+  const isExpressionInsideAwaitExpression = nodeUtils.isInsideAwaitExpression(node);
   const parentFunctionName = nodeUtils.getParentFunctionName(node);
   const parentMethodName = nodeUtils.getParentMethodName(node);
 
@@ -52,6 +53,7 @@ export function convertToPrismaExpression(
       isExpressionInsideLoop,
       isExpressionInsideFunction,
       isExpressionInsideClassMethod,
+      isExpressionInsideAwaitExpression,
       parentFunctionName,
       parentMethodName,
     },

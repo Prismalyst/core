@@ -124,6 +124,20 @@ export function createNodeUtils(ts: typeof TS) {
     return false;
   }
 
+  function isInsideAwaitExpression(node: TS.Node): boolean {
+    let current = node.parent;
+
+    while (current) {
+      if (ts.isAwaitExpression(current)) {
+        return true;
+      }
+
+      current = current.parent;
+    }
+
+    return false;
+  }
+
   function parseArgument(
     node: TS.CallExpression | TS.NewExpression,
     index = 0,
@@ -233,6 +247,7 @@ export function createNodeUtils(ts: typeof TS) {
     isInsideLoop,
     isInsideFunction,
     isInsideClassMethod,
+    isInsideAwaitExpression,
     parseArgument,
     parseObject,
     parseValue,

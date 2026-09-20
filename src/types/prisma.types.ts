@@ -26,6 +26,7 @@ export type PrismaExpression = {
     isExpressionInsideLoop: boolean;
     isExpressionInsideFunction: boolean;
     isExpressionInsideClassMethod: boolean;
+    isExpressionInsideAwaitExpression: boolean;
     parentFunctionName: string | null;
     parentMethodName: string | null;
   };
