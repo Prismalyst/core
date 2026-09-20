@@ -32,6 +32,7 @@ export function convertToPrismaExpression(
   const isExpressionInsideFunction = nodeUtils.isInsideFunction(node);
   const isExpressionInsideClassMethod = nodeUtils.isInsideClassMethod(node);
   const parentFunctionName = nodeUtils.getParentFunctionName(node);
+  const parentMethodName = nodeUtils.getParentMethodName(node);
 
   return {
     node: node,
@@ -52,6 +53,7 @@ export function convertToPrismaExpression(
       isExpressionInsideFunction,
       isExpressionInsideClassMethod,
       parentFunctionName,
+      parentMethodName,
     },
     prismaContext: {
       isFloatingPrismaPromise,

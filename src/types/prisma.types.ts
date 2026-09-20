@@ -27,6 +27,7 @@ export type PrismaExpression = {
     isExpressionInsideFunction: boolean;
     isExpressionInsideClassMethod: boolean;
     parentFunctionName: string | null;
+    parentMethodName: string | null;
   };
   prismaContext: {
     isFloatingPrismaPromise: boolean;

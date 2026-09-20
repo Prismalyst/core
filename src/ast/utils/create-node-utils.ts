@@ -41,6 +41,20 @@ export function createNodeUtils(ts: typeof TS) {
     return null;
   }
 
+  function getParentMethodName(node: TS.Node): string | null {
+    let current = node.parent;
+
+    while (current) {
+      if (ts.isFunctionLike(current)) {
+        return ts.isMethodDeclaration(current) ? getPropertyName(current.name) : null;
+      }
+
+      current = current.parent;
+    }
+
+    return null;
+  }
+
   function isInsideLoop(node: TS.Node): boolean {
     let current: TS.Node | undefined = node;
 
@@ -215,6 +229,7 @@ export function createNodeUtils(ts: typeof TS) {
     getPropertyName,
     resolveAliasedSymbol,
     getParentFunctionName,
+    getParentMethodName,
     isInsideLoop,
     isInsideFunction,
     isInsideClassMethod,
