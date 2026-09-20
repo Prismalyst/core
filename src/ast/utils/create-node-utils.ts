@@ -23,6 +23,79 @@ export function createNodeUtils(ts: typeof TS) {
     return name.getText();
   }
 
+  function resolveAliasedSymbol(symbol: TS.Symbol, checker: TS.TypeChecker): TS.Symbol {
+    return symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+  }
+
+  function isInsideLoop(node: TS.Node): boolean {
+    let current: TS.Node | undefined = node;
+
+    while (current) {
+      if (
+        ts.isForStatement(current) ||
+        ts.isForOfStatement(current) ||
+        ts.isForInStatement(current) ||
+        ts.isWhileStatement(current) ||
+        ts.isDoStatement(current)
+      ) {
+        return true;
+      }
+
+      if (ts.isFunctionLike(current)) {
+        const parent = current.parent;
+
+        if (
+          ts.isCallExpression(parent) &&
+          parent.arguments.includes(current as TS.Expression) &&
+          ts.isPropertyAccessExpression(parent.expression) &&
+          ['map', 'filter', 'reduce'].includes(parent.expression.name.text)
+        ) {
+          return true;
+        }
+
+        return false;
+      }
+
+      current = current.parent;
+    }
+
+    return false;
+  }
+
+  function isInsideFunction(node: TS.Node): boolean {
+    let current = node.parent;
+
+    while (current) {
+      if (
+        ts.isFunctionLike(current) &&
+        !(ts.isClassDeclaration(current.parent) || ts.isClassExpression(current.parent))
+      ) {
+        return true;
+      }
+
+      current = current.parent;
+    }
+
+    return false;
+  }
+
+  function isInsideClassMethod(node: TS.Node): boolean {
+    let current = node.parent;
+
+    while (current) {
+      if (
+        ts.isFunctionLike(current) &&
+        (ts.isClassDeclaration(current.parent) || ts.isClassExpression(current.parent))
+      ) {
+        return true;
+      }
+
+      current = current.parent;
+    }
+
+    return false;
+  }
+
   function parseArgument(
     node: TS.CallExpression | TS.NewExpression,
     index = 0,
@@ -126,6 +199,10 @@ export function createNodeUtils(ts: typeof TS) {
     isPropertyAccessExpression,
     isNewExpression,
     getPropertyName,
+    resolveAliasedSymbol,
+    isInsideLoop,
+    isInsideFunction,
+    isInsideClassMethod,
     parseArgument,
     parseObject,
     parseValue,
