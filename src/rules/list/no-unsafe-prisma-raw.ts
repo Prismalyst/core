@@ -1,12 +1,12 @@
-import { PrismaCall } from '../../types/prisma.types.js';
+import { PrismaExpression } from '../../types/prisma.types.js';
 import { Rule } from '../../types/rule.eslint.types.js';
 
-export function noUnsafePrismaRaw(caller: PrismaCall, rule: Rule) {
-  const isRuleMethod = rule.methods.includes(caller.method);
+export function noUnsafePrismaRaw(expression: PrismaExpression, rule: Rule) {
+  const isRuleMethod = rule.methods.includes(expression.method);
 
   if (!isRuleMethod) return false;
 
-  const firstArg = caller.args[0];
+  const firstArg = expression.args[0];
 
   if (firstArg === undefined) return false;
 

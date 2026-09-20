@@ -1,12 +1,12 @@
-import { PrismaCall } from '../../types/prisma.types.js';
+import { PrismaExpression } from '../../types/prisma.types.js';
 import { Rule } from '../../types/rule.eslint.types.js';
 
-export function requireWhereDeleteMany(caller: PrismaCall, rule: Rule) {
-  const isRuleMethod = rule.methods.includes(caller.method);
+export function requireWhereDeleteMany(expression: PrismaExpression, rule: Rule) {
+  const isRuleMethod = rule.methods.includes(expression.method);
 
   if (!isRuleMethod) return false;
 
-  const firstArg = caller.args[0] as Record<string, unknown>;
+  const firstArg = expression.args[0] as Record<string, unknown>;
 
   if (firstArg === undefined) return true;
 

@@ -1,5 +1,5 @@
 import type { NormalizedAstNode } from '../../types/ast.types.js';
-import type { PrismaCall } from '../../types/prisma.types.js';
+import type { PrismaExpression } from '../../types/prisma.types.js';
 import type { Rule } from '../../types/rule.eslint.types.js';
 
 function isTemplateNode(value: unknown): value is NormalizedAstNode {
@@ -13,8 +13,8 @@ function isTemplateNode(value: unknown): value is NormalizedAstNode {
   );
 }
 
-export function noDynamicRawQuery(caller: PrismaCall, rule: Rule): boolean {
-  if (!rule.methods.includes(caller.method)) return false;
+export function noDynamicRawQuery(expression: PrismaExpression, rule: Rule): boolean {
+  if (!rule.methods.includes(expression.method)) return false;
 
-  return isTemplateNode(caller.args[0]);
+  return isTemplateNode(expression.args[0]);
 }

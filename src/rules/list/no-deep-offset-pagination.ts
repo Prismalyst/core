@@ -1,12 +1,16 @@
-import { PrismaCall } from '../../types/prisma.types.js';
+import { PrismaExpression } from '../../types/prisma.types.js';
 import { Rule, RuleOptions } from '../../types/rule.eslint.types.js';
 
-export function noDeepOffsetPagination(caller: PrismaCall, rule: Rule, options: RuleOptions) {
-  const isRuleMethod = rule.methods.includes(caller.method);
+export function noDeepOffsetPagination(
+  expression: PrismaExpression,
+  rule: Rule,
+  options: RuleOptions,
+) {
+  const isRuleMethod = rule.methods.includes(expression.method);
 
   if (!isRuleMethod) return false;
 
-  const firstArg = caller.args[0] as Record<string, unknown>;
+  const firstArg = expression.args[0] as Record<string, unknown>;
 
   if (firstArg === undefined) return false;
 
