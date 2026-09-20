@@ -19,47 +19,55 @@ import { requireWhereUpdateMany } from './list/require-where-update-many.js';
 export const RULES_LIST: Rule[] = [
   {
     name: 'no-unsafe-raw-sql',
+    astType: 'callExpression',
     methods: [...PRISMA_UNSAFE_SQL_METHODS],
     function: noUnsafeRawSQL,
   },
   {
     name: 'no-dynamic-raw-query',
+    astType: 'callExpression',
     methods: [...PRISMA_UNSAFE_SQL_METHODS],
     function: noDynamicRawQuery,
   },
   {
     name: 'no-unsafe-prisma-raw',
+    astType: 'callExpression',
     methods: [...PRISMA_SQL_HELPERS],
     function: noUnsafePrismaRaw,
   },
   {
     name: 'no-floating-prisma-promise',
+    astType: 'callExpression',
     methods: [...PRISMA_METHODS],
     function: noFloatingPrismaPromise,
   },
   {
     name: 'require-where-delete-many',
-
+    astType: 'callExpression',
     methods: ['deleteMany'],
     function: requireWhereDeleteMany,
   },
   {
     name: 'require-where-update-many',
+    astType: 'callExpression',
     methods: ['updateMany'],
     function: requireWhereUpdateMany,
   },
   {
     name: 'no-query-in-loop',
+    astType: 'callExpression',
     methods: [...PRISMA_METHODS],
     function: noQueryInLoop,
   },
   {
     name: 'max-take',
+    astType: 'callExpression',
     methods: ['findMany'],
     function: maxTake,
   },
   {
     name: 'no-deep-offset-pagination',
+    astType: 'callExpression',
     methods: ['findMany'],
     function: noDeepOffsetPagination,
   },
