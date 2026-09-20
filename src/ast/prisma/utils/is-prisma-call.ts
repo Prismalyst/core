@@ -39,7 +39,7 @@ export function isPrismaExpression(
 
     if (!symbol) return false;
 
-    const resolvedSymbol = prismaUtils.resolveAliasedSymbol(symbol, checker);
+    const resolvedSymbol = nodeUtils.resolveAliasedSymbol(symbol, checker);
 
     if (resolvedSymbol.getName() !== 'PrismaClient') return false;
 

@@ -28,9 +28,9 @@ export function convertToPrismaExpression(
 
   const isFloatingPrismaPromise = prismaUtils.isFloatingPrismaPromise(node, node.parent, checker);
   const isExpressionInsideTransaction = prismaUtils.isInsidePrismaTransaction(node);
-  const isExpressionInsideLoop = prismaUtils.isInsideLoop(node);
-  const isExpressionInsideFunction = prismaUtils.isInsideFunction(node);
-  const isExpressionInsideClassMethod = prismaUtils.isInsideClassMethod(node);
+  const isExpressionInsideLoop = nodeUtils.isInsideLoop(node);
+  const isExpressionInsideFunction = nodeUtils.isInsideFunction(node);
+  const isExpressionInsideClassMethod = nodeUtils.isInsideClassMethod(node);
 
   return {
     node: node,
