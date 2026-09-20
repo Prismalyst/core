@@ -20,6 +20,7 @@ export function convertToPrismaExpression(
     .getLineAndCharacterOfPosition(node.getEnd());
 
   const nodeLength = node.getWidth();
+  const filename = node.getSourceFile().fileName;
 
   const args = node.arguments ?? [];
 
@@ -28,16 +29,11 @@ export function convertToPrismaExpression(
   const isFloatingPrismaPromise = prismaUtils.isFloatingPrismaPromise(node, node.parent, checker);
   const isExpressionInsideTransaction = prismaUtils.isInsidePrismaTransaction(node);
   const isExpressionInsideLoop = prismaUtils.isInsideLoop(node);
+  const isExpressionInsideFunction = prismaUtils.isInsideFunction(node);
+  const isExpressionInsideClassMethod = prismaUtils.isInsideClassMethod(node);
 
   return {
     node: node,
-    method,
-    args: args.map((_, index) => nodeUtils.parseArgument(node, index)),
-    prisma: {
-      isFloatingPrismaPromise,
-      isExpressionInsideTransaction,
-      isExpressionInsideLoop,
-    },
     range: {
       start: {
         line: startLine,
@@ -49,5 +45,15 @@ export function convertToPrismaExpression(
       },
       length: nodeLength,
     },
+    filename,
+    prisma: {
+      isFloatingPrismaPromise,
+      isExpressionInsideTransaction,
+      isExpressionInsideLoop,
+      isExpressionInsideFunction,
+      isExpressionInsideClassMethod,
+    },
+    method,
+    args: args.map((_, index) => nodeUtils.parseArgument(node, index)),
   };
 }

@@ -21,10 +21,13 @@ export type PrismaExpression = {
     };
     length: number;
   };
+  filename: string;
   prisma: {
     isFloatingPrismaPromise: boolean;
     isExpressionInsideTransaction: boolean;
     isExpressionInsideLoop: boolean;
+    isExpressionInsideFunction: boolean;
+    isExpressionInsideClassMethod: boolean;
   };
   method: string;
   args: unknown[];
