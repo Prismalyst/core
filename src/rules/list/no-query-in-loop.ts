@@ -6,5 +6,5 @@ export function noQueryInLoop(expression: PrismaExpression, rule: Rule): boolean
 
   if (!isRuleMethod) return false;
 
-  return expression.prisma.isExpressionInsideLoop;
+  return expression.expressionContext.isExpressionInsideLoop;
 }

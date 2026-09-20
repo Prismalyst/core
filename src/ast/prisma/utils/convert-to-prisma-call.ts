@@ -46,12 +46,14 @@ export function convertToPrismaExpression(
       length: nodeLength,
     },
     filename,
-    prisma: {
-      isFloatingPrismaPromise,
-      isExpressionInsideTransaction,
+    expressionContext: {
       isExpressionInsideLoop,
       isExpressionInsideFunction,
       isExpressionInsideClassMethod,
+    },
+    prismaContext: {
+      isFloatingPrismaPromise,
+      isExpressionInsideTransaction,
     },
     method,
     args: args.map((_, index) => nodeUtils.parseArgument(node, index)),
