@@ -8,6 +8,6 @@ export function noFloatingPrismaPromise(expression: PrismaExpression, rule: Rule
 
   return (
     expression.prismaContext.isFloatingPrismaPromise &&
-    !expression.prismaContext.isExpressionInsideTransaction
+    !expression.expressionContext.isExpressionInsideAwaitExpression
   );
 }
