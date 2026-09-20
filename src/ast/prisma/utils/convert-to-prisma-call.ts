@@ -1,16 +1,15 @@
 import type * as TS from 'typescript';
 
-import { PrismaCall, PrismaCallExpression } from '../../../types/prisma.types.js';
+import { PrismaExpression, PrismaNodeExpression } from '../../../types/prisma.types.js';
 
 import { AstUtils } from '../../utils/create-ast-utils.js';
 
-export function convertToPrismaCall(
-  node: PrismaCallExpression,
+export function convertToPrismaExpression(
+  node: PrismaNodeExpression,
   program: TS.Program,
   { node: nodeUtils, prisma: prismaUtils }: AstUtils,
-): PrismaCall {
-  const methodNode = node.expression.name;
-  const method = methodNode.text;
+): PrismaExpression {
+  const method = nodeUtils.isNewExpression(node) ? 'PrismaClient' : node.expression.name.text;
 
   const { line: startLine, character: startCharacter } = node
     .getSourceFile()
@@ -22,13 +21,13 @@ export function convertToPrismaCall(
 
   const nodeLength = node.getWidth();
 
-  const args = node.arguments;
+  const args = node.arguments ?? [];
 
   const checker = program.getTypeChecker();
 
   const isFloatingPrismaPromise = prismaUtils.isFloatingPrismaPromise(node, node.parent, checker);
-  const isCallInsideTransaction = prismaUtils.isInsidePrismaTransaction(node);
-  const isCallInsideLoop = prismaUtils.isInsideLoop(node);
+  const isExpressionInsideTransaction = prismaUtils.isInsidePrismaTransaction(node);
+  const isExpressionInsideLoop = prismaUtils.isInsideLoop(node);
 
   return {
     node: node,
@@ -36,8 +35,8 @@ export function convertToPrismaCall(
     args: args.map((_, index) => nodeUtils.parseArgument(node, index)),
     prisma: {
       isFloatingPrismaPromise,
-      isCallInsideTransaction,
-      isCallInsideLoop,
+      isExpressionInsideTransaction,
+      isExpressionInsideLoop,
     },
     range: {
       start: {
