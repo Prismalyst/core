@@ -27,6 +27,20 @@ export function createNodeUtils(ts: typeof TS) {
     return symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
   }
 
+  function getParentFunctionName(node: TS.Node): string | null {
+    let current = node.parent;
+
+    while (current) {
+      if (ts.isFunctionLike(current)) {
+        return ts.isFunctionDeclaration(current) ? (current.name?.text ?? null) : null;
+      }
+
+      current = current.parent;
+    }
+
+    return null;
+  }
+
   function isInsideLoop(node: TS.Node): boolean {
     let current: TS.Node | undefined = node;
 
@@ -200,6 +214,7 @@ export function createNodeUtils(ts: typeof TS) {
     isNewExpression,
     getPropertyName,
     resolveAliasedSymbol,
+    getParentFunctionName,
     isInsideLoop,
     isInsideFunction,
     isInsideClassMethod,
