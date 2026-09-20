@@ -11,6 +11,10 @@ export function createNodeUtils(ts: typeof TS) {
     return ts.isPropertyAccessExpression(node);
   }
 
+  function isNewExpression(node: TS.Node) {
+    return ts.isNewExpression(node);
+  }
+
   function getPropertyName(name: TS.PropertyName): string {
     if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) {
       return name.text;
@@ -19,8 +23,11 @@ export function createNodeUtils(ts: typeof TS) {
     return name.getText();
   }
 
-  function parseArgument(node: TS.CallExpression, index = 0): AstValue | undefined {
-    const argument = node.arguments[index];
+  function parseArgument(
+    node: TS.CallExpression | TS.NewExpression,
+    index = 0,
+  ): AstValue | undefined {
+    const argument = node.arguments?.[index];
 
     if (!argument) {
       return undefined;
@@ -117,6 +124,7 @@ export function createNodeUtils(ts: typeof TS) {
   return {
     isCallExpression,
     isPropertyAccessExpression,
+    isNewExpression,
     getPropertyName,
     parseArgument,
     parseObject,
