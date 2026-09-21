@@ -16,6 +16,7 @@ import { noUnsafePrismaRaw } from './list/no-unsafe-prisma-raw.js';
 import { noUnsafeRawSQL } from './list/no-unsafe-raw-sql.js';
 import { requireWhereDeleteMany } from './list/require-where-delete-many.js';
 import { requireWhereUpdateMany } from './list/require-where-update-many.js';
+import { noDisconnectInRequestFlow } from './list/no-disconnect-in-request-flow.js';
 
 export const RULES_LIST: Rule[] = [
   {
@@ -78,4 +79,10 @@ export const RULES_LIST: Rule[] = [
     methods: [],
     function: noPrismaClientInFunction,
   },
+  {
+    name: 'no-disconnect-in-request-flow',
+    astType: 'callExpression',
+    methods: ['$disconnect'],
+    function: noDisconnectInRequestFlow,
+  }
 ];
