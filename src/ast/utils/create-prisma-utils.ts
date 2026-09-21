@@ -55,13 +55,13 @@ export function createPrismaUtils(ts: typeof TS) {
 
     while (true) {
       const type = checker.getTypeAtLocation(receiver);
-      const transaction = checker.getPropertyOfType(type, '$transaction');
+      const connect = checker.getPropertyOfType(type, '$connect');
       const queryRaw = checker.getPropertyOfType(type, '$queryRaw');
 
-      if (isGeneratedPrismaFile(transaction?.getDeclarations() ?? [])) return 'prisma';
+      if (isGeneratedPrismaFile(connect?.getDeclarations() ?? [])) return 'prisma';
 
-      // Transaction clients retain query methods but omit $transaction.
-      if (!transaction && isGeneratedPrismaFile(queryRaw?.getDeclarations() ?? [])) {
+      // Transaction clients retain query methods but omit $connect.
+      if (!connect && isGeneratedPrismaFile(queryRaw?.getDeclarations() ?? [])) {
         return 'transaction';
       }
 
