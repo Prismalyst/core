@@ -1,6 +1,9 @@
 import type { PrismaExpression } from '../../types/prisma.types.js';
 import type { Rule, RuleOptions } from '../../types/rule.eslint.types.js';
 
+import { isExpressionInIgnoredFiles } from '../utils/is-expression-in-ignored-files.js';
+import { isExpressionInTestFile } from '../utils/is-expression-in-test-file.js';
+
 export function noDisconnectInRequestFlow(
   expression: PrismaExpression,
   rule: Rule,
@@ -13,15 +16,12 @@ export function noDisconnectInRequestFlow(
   const ignoredFiles = options.ignoredFiles as string[];
   const allowInTests = options.allowInTests as boolean;
 
-  // TODO: fix this
-  // now sth like ['pastes.service.ts'].includes(expression.filename)
-  const isExpressionInIgnoredFile = ignoredFiles.includes(expression.filename);
+  const isInIgnoredFile = isExpressionInIgnoredFiles(expression.filename, ignoredFiles);
 
-  const isExpressionInTestFile =
-    expression.filename.includes('.test.') || expression.filename.includes('.spec.');
+  const isInTestFile = isExpressionInTestFile(expression.filename);
 
-  if (isExpressionInIgnoredFile) return false;
-  if (allowInTests && isExpressionInTestFile) return false;
+  if (isInIgnoredFile) return false;
+  if (allowInTests && isInTestFile) return false;
 
   return true;
 }
