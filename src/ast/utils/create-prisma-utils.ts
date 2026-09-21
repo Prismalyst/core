@@ -1,6 +1,76 @@
 import type * as TS from 'typescript';
 
+import type { ClientType, TransactionType } from '../../types/prisma.types.js';
+
 export function createPrismaUtils(ts: typeof TS) {
+  function getTransactionType(node: TS.Node): TransactionType | null {
+    if (
+      !ts.isCallExpression(node) ||
+      !ts.isPropertyAccessExpression(node.expression) ||
+      node.expression.name.text !== '$transaction'
+    )
+      return null;
+
+    const argument = node.arguments[0];
+
+    if (!argument) return null;
+    if (ts.isArrayLiteralExpression(argument)) return 'sequential';
+    if (ts.isArrowFunction(argument) || ts.isFunctionExpression(argument)) return 'interactive';
+
+    return null;
+  }
+
+  function resolveTransactionType(node: TS.Node): TransactionType | null {
+    const directType = getTransactionType(node);
+
+    if (directType) return directType;
+
+    return findContainingTransactionType(node);
+  }
+
+  function findContainingTransactionType(node: TS.Node): TransactionType | null {
+    let current = node;
+
+    while (current.parent) {
+      const parent = current.parent;
+
+      if (ts.isCallExpression(parent) && parent.arguments[0] === current) {
+        const type = getTransactionType(parent);
+
+        if (type) return type;
+      }
+
+      current = parent;
+    }
+
+    return null;
+  }
+
+  function resolveClientType(node: TS.Node, checker: TS.TypeChecker): ClientType {
+    if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression)) {
+      return 'unknown';
+    }
+
+    let receiver = node.expression.expression;
+
+    while (true) {
+      const type = checker.getTypeAtLocation(receiver);
+      const transaction = checker.getPropertyOfType(type, '$transaction');
+      const queryRaw = checker.getPropertyOfType(type, '$queryRaw');
+
+      if (isGeneratedPrismaFile(transaction?.getDeclarations() ?? [])) return 'prisma';
+
+      // Transaction clients retain query methods but omit $transaction.
+      if (!transaction && isGeneratedPrismaFile(queryRaw?.getDeclarations() ?? [])) {
+        return 'transaction';
+      }
+
+      if (!ts.isPropertyAccessExpression(receiver)) return 'unknown';
+
+      receiver = receiver.expression;
+    }
+  }
+
   function isGeneratedPrismaFile(declarations: TS.Declaration[]) {
     return declarations.some((declaration) => {
       const fileName = declaration.getSourceFile().fileName;
@@ -26,29 +96,12 @@ export function createPrismaUtils(ts: typeof TS) {
   }
 
   function isInsidePrismaTransaction(node: TS.Node): boolean {
-    let current: TS.Node | undefined = node;
-
-    while (current) {
-      if (ts.isArrayLiteralExpression(current)) {
-        const parent: TS.Node = current.parent;
-
-        if (
-          ts.isCallExpression(parent) &&
-          parent.arguments.includes(current) &&
-          ts.isPropertyAccessExpression(parent.expression) &&
-          parent.expression.name.text === '$transaction'
-        ) {
-          return true;
-        }
-      }
-
-      current = current.parent;
-    }
-
-    return false;
+    return findContainingTransactionType(node) !== null;
   }
 
   return {
+    resolveTransactionType,
+    resolveClientType,
     isGeneratedPrismaFile,
     isFloatingPrismaPromise,
     isInsidePrismaTransaction,

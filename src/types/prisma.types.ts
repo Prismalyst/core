@@ -1,5 +1,8 @@
 import type * as TS from 'typescript';
 
+export type TransactionType = 'interactive' | 'sequential';
+export type ClientType = 'prisma' | 'transaction' | 'unknown';
+
 export type PrismaExpressionExpression = TS.CallExpression & {
   expression: TS.PropertyAccessExpression;
 };
@@ -33,6 +36,8 @@ export type PrismaExpression = {
   prismaContext: {
     isFloatingPrismaPromise: boolean;
     isExpressionInsideTransaction: boolean;
+    transactionType: TransactionType | null;
+    clientType: ClientType;
   };
   method: string;
   args: unknown[];
