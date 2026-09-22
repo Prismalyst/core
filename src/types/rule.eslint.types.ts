@@ -1,7 +1,6 @@
 import { PrismaExpression } from './prisma.types.js';
 
-// TODO: Make this more generic
-export type RuleOptions = Readonly<Record<string, unknown>>;
+export type RuleOptions<T = Record<string, unknown>> = Readonly<T>;
 
 type RuleAstType = 'callExpression' | 'newExpression';
 
