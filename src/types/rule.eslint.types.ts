@@ -8,5 +8,11 @@ export type Rule = {
   name: string;
   astType: RuleAstType;
   methods: string[];
-  function: (prismaExpression: PrismaExpression, rule: Rule, options: RuleOptions) => boolean;
+  function: (
+    prismaExpression: PrismaExpression,
+    rule: RuleWithoutFunction,
+    options: RuleOptions,
+  ) => boolean;
 };
+
+export type RuleWithoutFunction = Omit<Rule, 'function'>;
