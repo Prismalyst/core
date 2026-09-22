@@ -4,17 +4,22 @@ import type { Rule, RuleOptions } from '../../types/rule.eslint.types.js';
 import { isExpressionInIgnoredFiles } from '../utils/is-expression-in-ignored-files.js';
 import { isExpressionInTestFile } from '../utils/is-expression-in-test-file.js';
 
+export interface NoDisconnectInRequestFlowOptions {
+  ignoredFiles: string[];
+  allowInTests: boolean;
+}
+
 export function noDisconnectInRequestFlow(
   expression: PrismaExpression,
   rule: Rule,
-  options: RuleOptions,
+  options: RuleOptions<NoDisconnectInRequestFlowOptions>,
 ): boolean {
   const isRuleMethod = rule.methods.includes(expression.method);
 
   if (!isRuleMethod) return false;
 
-  const ignoredFiles = options.ignoredFiles as string[];
-  const allowInTests = options.allowInTests as boolean;
+  const ignoredFiles = options.ignoredFiles;
+  const allowInTests = options.allowInTests;
 
   const isInIgnoredFile = isExpressionInIgnoredFiles(expression.filename, ignoredFiles);
 
