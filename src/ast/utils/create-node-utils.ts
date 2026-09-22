@@ -11,6 +11,10 @@ export function createNodeUtils(ts: typeof TS) {
     return ts.isPropertyAccessExpression(node);
   }
 
+  function isNewExpression(node: TS.Node) {
+    return ts.isNewExpression(node);
+  }
+
   function getPropertyName(name: TS.PropertyName): string {
     if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) {
       return name.text;
@@ -19,8 +23,126 @@ export function createNodeUtils(ts: typeof TS) {
     return name.getText();
   }
 
-  function parseArgument(node: TS.CallExpression, index = 0): AstValue | undefined {
-    const argument = node.arguments[index];
+  function resolveAliasedSymbol(symbol: TS.Symbol, checker: TS.TypeChecker): TS.Symbol {
+    return symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+  }
+
+  function getParentFunctionName(node: TS.Node): string | null {
+    let current = node.parent;
+
+    while (current) {
+      if (ts.isFunctionLike(current)) {
+        return ts.isFunctionDeclaration(current) ? (current.name?.text ?? null) : null;
+      }
+
+      current = current.parent;
+    }
+
+    return null;
+  }
+
+  function getParentMethodName(node: TS.Node): string | null {
+    let current = node.parent;
+
+    while (current) {
+      if (ts.isFunctionLike(current)) {
+        return ts.isMethodDeclaration(current) ? getPropertyName(current.name) : null;
+      }
+
+      current = current.parent;
+    }
+
+    return null;
+  }
+
+  function isInsideLoop(node: TS.Node): boolean {
+    let current: TS.Node | undefined = node;
+
+    while (current) {
+      if (
+        ts.isForStatement(current) ||
+        ts.isForOfStatement(current) ||
+        ts.isForInStatement(current) ||
+        ts.isWhileStatement(current) ||
+        ts.isDoStatement(current)
+      ) {
+        return true;
+      }
+
+      if (ts.isFunctionLike(current)) {
+        const parent = current.parent;
+
+        if (
+          ts.isCallExpression(parent) &&
+          parent.arguments.includes(current as TS.Expression) &&
+          ts.isPropertyAccessExpression(parent.expression) &&
+          ['map', 'filter', 'reduce'].includes(parent.expression.name.text)
+        ) {
+          return true;
+        }
+
+        return false;
+      }
+
+      current = current.parent;
+    }
+
+    return false;
+  }
+
+  function isInsideFunction(node: TS.Node): boolean {
+    let current = node.parent;
+
+    while (current) {
+      if (
+        ts.isFunctionLike(current) &&
+        !(ts.isClassDeclaration(current.parent) || ts.isClassExpression(current.parent))
+      ) {
+        return true;
+      }
+
+      current = current.parent;
+    }
+
+    return false;
+  }
+
+  function isInsideClassMethod(node: TS.Node): boolean {
+    let current = node.parent;
+
+    while (current) {
+      if (
+        ts.isFunctionLike(current) &&
+        (ts.isClassDeclaration(current.parent) || ts.isClassExpression(current.parent))
+      ) {
+        return true;
+      }
+
+      current = current.parent;
+    }
+
+    return false;
+  }
+
+  function isInsideAwaitExpression(node: TS.Node): boolean {
+    let current = node.parent;
+
+    while (current) {
+      if (ts.isAwaitExpression(current)) {
+        return true;
+      }
+
+      current = current.parent;
+    }
+
+    return false;
+  }
+
+  function parseArgument(
+    node: TS.CallExpression | TS.NewExpression,
+    index = 0,
+  ): AstValue | undefined {
+    const argument = node.arguments?.[index];
 
     if (!argument) {
       return undefined;
@@ -65,6 +187,18 @@ export function createNodeUtils(ts: typeof TS) {
       return Number(node.text);
     }
 
+    if (ts.isPrefixUnaryExpression(node) && ts.isNumericLiteral(node.operand)) {
+      const value = Number(node.operand.text);
+
+      if (node.operator === ts.SyntaxKind.MinusToken) {
+        return -value;
+      }
+
+      if (node.operator === ts.SyntaxKind.PlusToken) {
+        return value;
+      }
+    }
+
     if (node.kind === ts.SyntaxKind.TrueKeyword) {
       return true;
     }
@@ -87,6 +221,13 @@ export function createNodeUtils(ts: typeof TS) {
       }
     }
 
+    if (ts.isTemplateExpression(node)) {
+      return {
+        kind: 'template',
+        raw: node.getText(),
+      };
+    }
+
     // id
     // user.id
     // getWhere()
@@ -98,7 +239,15 @@ export function createNodeUtils(ts: typeof TS) {
   return {
     isCallExpression,
     isPropertyAccessExpression,
+    isNewExpression,
     getPropertyName,
+    resolveAliasedSymbol,
+    getParentFunctionName,
+    getParentMethodName,
+    isInsideLoop,
+    isInsideFunction,
+    isInsideClassMethod,
+    isInsideAwaitExpression,
     parseArgument,
     parseObject,
     parseValue,
