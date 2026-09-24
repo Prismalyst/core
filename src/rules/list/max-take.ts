@@ -1,7 +1,6 @@
 import { PrismaExpression } from '../../types/prisma.types.js';
 import { RuleOptions, RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
-import { isObjectEmpty } from '../utils/is-object-empty.js';
 import { isObject } from '../utils/is-object.js';
 
 export interface MaxTakeOptions {
