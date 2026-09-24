@@ -1,17 +1,17 @@
 import { PrismaExpression } from './prisma.types.js';
 
-export type RuleOptions<T = Record<string, unknown>> = Readonly<T>;
-
 type RuleAstType = 'callExpression' | 'newExpression';
 
-export type Rule = {
+export type RuleOptions<T> = Readonly<T>;
+
+export type Rule<TOptions = Record<PropertyKey, never>> = {
   name: string;
   astType: RuleAstType;
   methods: string[];
   function: (
     prismaExpression: PrismaExpression,
     rule: RuleWithoutFunction,
-    options: RuleOptions,
+    options: RuleOptions<TOptions>,
   ) => boolean;
 };
 

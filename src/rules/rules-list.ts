@@ -1,4 +1,4 @@
-import { Rule } from '../types/rule.eslint.types.js';
+import { RegisteredRule } from './types/rules-options.types.js';
 
 import {
   PRISMA_METHODS,
@@ -19,7 +19,7 @@ import { noUnsafeRawSQL } from './list/no-unsafe-raw-sql.js';
 import { requireWhereDeleteMany } from './list/require-where-delete-many.js';
 import { requireWhereUpdateMany } from './list/require-where-update-many.js';
 
-export const RULES_LIST: Rule[] = [
+export const RULES_LIST: RegisteredRule[] = [
   {
     name: 'no-unsafe-raw-sql',
     astType: 'callExpression',
