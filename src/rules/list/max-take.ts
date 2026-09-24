@@ -32,8 +32,5 @@ export function maxTake(
   // We can guarantee options and options.max is defined
   // And options.max is a number
   // Because ESLint doesn't allow to pass empty rule's options
-  if (options.max !== undefined) return false;
-  if (typeof options.max !== 'number') return false;
-
   return firstArg.take > options.max;
 }
