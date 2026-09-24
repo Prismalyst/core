@@ -1,8 +1,7 @@
-import { PrismaExpression } from '../../types/prisma.types.js';
+import { ExpressionContext } from '../../types/prisma.types.js';
 
-export function isExpressionInsideFunctionLike(expression: PrismaExpression) {
+export function isExpressionInsideFunctionLike(expressionContext: ExpressionContext) {
   return (
-    expression.expressionContext.isExpressionInsideFunction ||
-    expression.expressionContext.isExpressionInsideClassMethod
+    expressionContext.isExpressionInsideFunction || expressionContext.isExpressionInsideClassMethod
   );
 }

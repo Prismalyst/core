@@ -1,11 +1,11 @@
-import { PrismaExpression } from '../../types/prisma.types.js';
+import { ExpressionContext } from '../../types/prisma.types.js';
 
 export function isExpressionInAllowedFunction(
-  expression: PrismaExpression,
+  expressionContext: ExpressionContext,
   allowedFunctionsNames: string[],
 ) {
   return (
-    expression.expressionContext.parentFunctionName &&
-    allowedFunctionsNames.includes(expression.expressionContext.parentFunctionName)
+    expressionContext.parentFunctionName &&
+    allowedFunctionsNames.includes(expressionContext.parentFunctionName)
   );
 }
