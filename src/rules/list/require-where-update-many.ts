@@ -1,10 +1,10 @@
 import { PrismaExpression } from '../../types/prisma.types.js';
-import { Rule } from '../../types/rule.eslint.types.js';
+import { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
 import { isObjectEmpty } from '../utils/is-object-empty.js';
 import { isObject } from '../utils/is-object.js';
 
-export function requireWhereUpdateMany(expression: PrismaExpression, rule: Rule) {
+export function requireWhereUpdateMany(expression: PrismaExpression, rule: RuleWithoutFunction) {
   const isRuleMethod = rule.methods.includes(expression.method);
 
   if (!isRuleMethod) return false;

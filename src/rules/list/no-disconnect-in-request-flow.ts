@@ -1,5 +1,5 @@
 import type { PrismaExpression } from '../../types/prisma.types.js';
-import type { Rule, RuleOptions } from '../../types/rule.eslint.types.js';
+import type { RuleOptions, RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
 import { isExpressionInIgnoredFiles } from '../utils/is-expression-in-ignored-files.js';
 import { isExpressionInTestFile } from '../utils/is-expression-in-test-file.js';
@@ -11,7 +11,7 @@ export interface NoDisconnectInRequestFlowOptions {
 
 export function noDisconnectInRequestFlow(
   expression: PrismaExpression,
-  rule: Rule,
+  rule: RuleWithoutFunction,
   options: RuleOptions<NoDisconnectInRequestFlowOptions>,
 ): boolean {
   const isRuleMethod = rule.methods.includes(expression.method);

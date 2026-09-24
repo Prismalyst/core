@@ -1,7 +1,10 @@
 import type { PrismaExpression } from '../../types/prisma.types.js';
-import type { Rule } from '../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
-export function noRootClientInTransaction(expression: PrismaExpression, rule: Rule): boolean {
+export function noRootClientInTransaction(
+  expression: PrismaExpression,
+  rule: RuleWithoutFunction,
+): boolean {
   const isRuleMethod = rule.methods.includes(expression.method);
 
   if (!isRuleMethod) return false;

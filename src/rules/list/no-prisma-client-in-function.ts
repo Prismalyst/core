@@ -1,5 +1,5 @@
 import type { PrismaExpression } from '../../types/prisma.types.js';
-import type { Rule, RuleOptions } from '../../types/rule.eslint.types.js';
+import type { RuleOptions, RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
 import { isExpressionInAllowedFunction } from '../utils/is-expression-in-allowed-function.js';
 import { isExpressionInIgnoredFiles } from '../utils/is-expression-in-ignored-files.js';
@@ -15,7 +15,7 @@ export type NoPrismaClientInFunctionOptions = {
 
 export function noPrismaClientInFunction(
   expression: PrismaExpression,
-  _rule: Rule,
+  _rule: RuleWithoutFunction,
   options: RuleOptions<NoPrismaClientInFunctionOptions>,
 ): boolean {
   // We can guarantee that incoming expression is a prisma-generated class

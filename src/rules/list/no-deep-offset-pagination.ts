@@ -1,5 +1,5 @@
 import { PrismaExpression } from '../../types/prisma.types.js';
-import { Rule, RuleOptions } from '../../types/rule.eslint.types.js';
+import { RuleOptions, RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
 import { isObject } from '../utils/is-object.js';
 
@@ -10,7 +10,7 @@ export interface NoDeepOffsetPaginationOptions {
 
 export function noDeepOffsetPagination(
   expression: PrismaExpression,
-  rule: Rule,
+  rule: RuleWithoutFunction,
   options: RuleOptions<NoDeepOffsetPaginationOptions>,
 ) {
   const isRuleMethod = rule.methods.includes(expression.method);
