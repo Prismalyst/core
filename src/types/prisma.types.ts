@@ -11,34 +11,40 @@ export type PrismaClientExpression = TS.NewExpression;
 
 export type PrismaNodeExpression = PrismaExpressionExpression | PrismaClientExpression;
 
+export type ExpressionContext = {
+  isExpressionInsideLoop: boolean;
+  isExpressionInsideFunction: boolean;
+  isExpressionInsideClassMethod: boolean;
+  isExpressionInsideAwaitExpression: boolean;
+  parentFunctionName: string | null;
+  parentMethodName: string | null;
+};
+
+export type PrismaContext = {
+  isFloatingPrismaPromise: boolean;
+  isExpressionInsideTransaction: boolean;
+  transactionType: TransactionType | null;
+  clientType: ClientType;
+};
+
+type Range = {
+  start: {
+    line: number;
+    character: number;
+  };
+  end: {
+    line: number;
+    character: number;
+  };
+  length: number;
+};
+
 export type PrismaExpression = {
   node: PrismaNodeExpression;
-  range: {
-    start: {
-      line: number;
-      character: number;
-    };
-    end: {
-      line: number;
-      character: number;
-    };
-    length: number;
-  };
+  range: Range;
   filename: string;
-  expressionContext: {
-    isExpressionInsideLoop: boolean;
-    isExpressionInsideFunction: boolean;
-    isExpressionInsideClassMethod: boolean;
-    isExpressionInsideAwaitExpression: boolean;
-    parentFunctionName: string | null;
-    parentMethodName: string | null;
-  };
-  prismaContext: {
-    isFloatingPrismaPromise: boolean;
-    isExpressionInsideTransaction: boolean;
-    transactionType: TransactionType | null;
-    clientType: ClientType;
-  };
+  expressionContext: ExpressionContext;
+  prismaContext: PrismaContext;
   method: string;
   args: unknown[];
 };
