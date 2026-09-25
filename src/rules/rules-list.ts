@@ -35,7 +35,7 @@ export const RULES_LIST: RegisteredRule[] = [
   {
     name: 'no-unsafe-prisma-raw',
     astType: 'callExpression',
-    methods: [...PRISMA_SQL_HELPERS],
+    methods: ['raw'],
     function: noUnsafePrismaRaw,
   },
   {
