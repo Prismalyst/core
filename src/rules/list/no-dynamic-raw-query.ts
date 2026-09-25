@@ -4,7 +4,7 @@ import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 import { isTemplateNode } from '../utils/is-template-node.js';
 
 export function noDynamicRawQuery(
-  expression: PrismaExpression,
+  expression: Pick<PrismaExpression, 'method' | 'args'>,
   rule: RuleWithoutFunction,
 ): boolean {
   if (!rule.methods.includes(expression.method)) return false;

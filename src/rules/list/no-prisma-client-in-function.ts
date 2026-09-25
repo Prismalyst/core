@@ -14,7 +14,7 @@ export type NoPrismaClientInFunctionOptions = {
 };
 
 export function noPrismaClientInFunction(
-  expression: PrismaExpression,
+  expression: Pick<PrismaExpression, 'filename' | 'expressionContext'>,
   _rule: RuleWithoutFunction,
   options: RuleOptions<NoPrismaClientInFunctionOptions>,
 ): boolean {
@@ -25,11 +25,16 @@ export function noPrismaClientInFunction(
   const allowedFunctionsNames = options.allowedFunctionsNames;
   const allowInTests = options.allowInTests;
 
-  const isInsideFunctionLike = isExpressionInsideFunctionLike(expression);
-  const isInsideConstructor = isExpressionInsideConstructor(expression);
-  const isInIgnoredFile = isExpressionInIgnoredFiles(expression.filename, ignoredFiles);
-  const isInAllowedFunction = isExpressionInAllowedFunction(expression, allowedFunctionsNames);
-  const isInTestFile = isExpressionInTestFile(expression.filename);
+  const { expressionContext, filename } = expression;
+
+  const isInsideFunctionLike = isExpressionInsideFunctionLike(expressionContext);
+  const isInsideConstructor = isExpressionInsideConstructor(expressionContext);
+  const isInIgnoredFile = isExpressionInIgnoredFiles(filename, ignoredFiles);
+  const isInAllowedFunction = isExpressionInAllowedFunction(
+    expressionContext,
+    allowedFunctionsNames,
+  );
+  const isInTestFile = isExpressionInTestFile(filename);
 
   if (!isInsideFunctionLike) return false;
   if (isInsideConstructor) return false;

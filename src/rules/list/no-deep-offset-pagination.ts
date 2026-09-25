@@ -9,7 +9,7 @@ export interface NoDeepOffsetPaginationOptions {
 }
 
 export function noDeepOffsetPagination(
-  expression: PrismaExpression,
+  expression: Pick<PrismaExpression, 'method' | 'args'>,
   rule: RuleWithoutFunction,
   options: RuleOptions<NoDeepOffsetPaginationOptions>,
 ) {

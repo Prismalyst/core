@@ -10,7 +10,7 @@ export interface NoDisconnectInRequestFlowOptions {
 }
 
 export function noDisconnectInRequestFlow(
-  expression: PrismaExpression,
+  expression: Pick<PrismaExpression, 'method' | 'filename'>,
   rule: RuleWithoutFunction,
   options: RuleOptions<NoDisconnectInRequestFlowOptions>,
 ): boolean {
