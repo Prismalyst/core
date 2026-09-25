@@ -22,7 +22,8 @@
     "pack": "npm pack",
     "pack:check": "npm pack --dry-run",
     "lint": "eslint \"{**/*,*}.{ts}\"",
-    "lint:fix": "eslint \"{**/*,*}.{ts}\" --fix"
+    "lint:fix": "eslint \"{**/*,*}.{ts}\" --fix",
+    "prisma:v7:generate": "npx prisma generate --schema ./src/tests/schema/v7"
   },
   "peerDependencies": {
     "typescript": ">=5.0.0 <7"
