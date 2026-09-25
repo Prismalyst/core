@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
-import { requireWhereUpdateMany } from '../../list/require-where-update-many.js';
+import { requireWhereUpdateMany } from '../../rules/list/require-where-update-many.js';
 
 const rule: RuleWithoutFunction = {
   name: 'require-where-update-many',

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
-import { noDynamicRawQuery } from '../../list/no-dynamic-raw-query.js';
+import { noDynamicRawQuery } from '../../rules/list/no-dynamic-raw-query.js';
 
 const rule: RuleWithoutFunction = {
   name: 'no-dynamic-raw-query',

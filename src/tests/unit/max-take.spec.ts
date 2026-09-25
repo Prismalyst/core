@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
-import { maxTake } from '../../list/max-take.js';
+import { maxTake } from '../../rules/list/max-take.js';
 
 const rule: RuleWithoutFunction = {
   name: 'max-take',

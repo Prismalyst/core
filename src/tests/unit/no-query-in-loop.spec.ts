@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
-import { noQueryInLoop } from '../../list/no-query-in-loop.js';
+import { noQueryInLoop } from '../../rules/list/no-query-in-loop.js';
 
 const rule: RuleWithoutFunction = {
   name: 'no-query-in-loop',

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
-import { requireWhereDeleteMany } from '../../list/require-where-delete-many.js';
+import { requireWhereDeleteMany } from '../../rules/list/require-where-delete-many.js';
 
 const rule: RuleWithoutFunction = {
   name: 'require-where-delete-many',

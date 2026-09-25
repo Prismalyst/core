@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
-import { noRootClientInTransaction } from '../../list/no-root-client-in-transaction.js';
+import { noRootClientInTransaction } from '../../rules/list/no-root-client-in-transaction.js';
 
 const rule: RuleWithoutFunction = {
   name: 'no-root-client-in-transaction',

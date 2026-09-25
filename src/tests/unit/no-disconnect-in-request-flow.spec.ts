@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
-import { noDisconnectInRequestFlow } from '../../list/no-disconnect-in-request-flow.js';
+import { noDisconnectInRequestFlow } from '../../rules/list/no-disconnect-in-request-flow.js';
 
 const rule: RuleWithoutFunction = {
   name: 'no-disconnect-in-request-flow',
