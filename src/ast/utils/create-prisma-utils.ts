@@ -71,6 +71,7 @@ export function createPrismaUtils(ts: typeof TS) {
     }
   }
 
+  // TODO: Make it configurable
   function isGeneratedPrismaFile(declarations: TS.Declaration[]) {
     return declarations.some((declaration) => {
       const fileName = declaration.getSourceFile().fileName;
