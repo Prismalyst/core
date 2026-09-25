@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
-import { noFloatingPrismaPromise } from '../../list/no-floating-prisma-promise.js';
+import { noFloatingPrismaPromise } from '../../rules/list/no-floating-prisma-promise.js';
 
 const rule: RuleWithoutFunction = {
   name: 'no-floating-prisma-promise',
