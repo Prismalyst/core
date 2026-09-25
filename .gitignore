@@ -8,6 +8,13 @@ build/
 **/dist/
 **/build/
 
+# Prisma
+**/generated/prisma/
+server/src/generated/
+src/generated/
+generated/
+prisma/generated/
+
 # Logs
 logs
 *.log
