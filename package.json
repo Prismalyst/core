@@ -29,6 +29,7 @@
     "typescript": ">=5.0.0 <7"
   },
   "devDependencies": {
+    "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "prettier": "^3.9.6",
