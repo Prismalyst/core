@@ -1,8 +1,8 @@
 import type * as TS from 'typescript';
 
-import { PrismaExpression, PrismaNodeExpression } from '../../../types/prisma.types.js';
+import { PrismaExpression, PrismaNodeExpression } from '../../types/prisma.types.js';
 
-import { AstUtils } from '../../utils/create-ast-utils.js';
+import { AstUtils } from '../utils/create-ast-utils.js';
 
 export function convertToPrismaExpression(
   node: PrismaNodeExpression,

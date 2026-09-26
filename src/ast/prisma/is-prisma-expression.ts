@@ -1,10 +1,10 @@
 import type * as TS from 'typescript';
 
-import { PrismaNodeExpression } from '../../../types/prisma.types.js';
+import { PrismaNodeExpression } from '../../types/prisma.types.js';
 
-import { AstUtils } from '../../utils/create-ast-utils.js';
+import { AstUtils } from '../utils/create-ast-utils.js';
 
-import { PRISMA_METHODS } from '../../../constants/prisma-methods.constants.js';
+import { PRISMA_METHODS } from '../../constants/prisma-methods.constants.js';
 
 export function isPrismaExpression(
   node: TS.Node,
