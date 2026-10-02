@@ -33,9 +33,26 @@ export function createAstParser(ts: typeof TS) {
     return calls;
   }
 
+  function findNewExpressions(sourceFile: TS.SourceFile): TS.NewExpression[] {
+    const calls: TS.NewExpression[] = [];
+
+    function visit(node: TS.Node): void {
+      if (ts.isNewExpression(node)) {
+        calls.push(node);
+      }
+
+      ts.forEachChild(node, visit);
+    }
+
+    visit(sourceFile);
+
+    return calls;
+  }
+
   return {
     findVariableStatements,
     findCallExpressions,
+    findNewExpressions,
   };
 }
 
