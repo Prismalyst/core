@@ -2,10 +2,9 @@ import * as TS from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 import { createAstParser } from '../../../ast/parser/create-ast-parser.js';
-import { convertToPrismaExpression } from '../../../ast/prisma/convert-to-prisma-expression.js';
-import { isPrismaExpression } from '../../../ast/prisma/is-prisma-expression.js';
 import { createAstUtils } from '../../../ast/utils/create-ast-utils.js';
 import { createTestProgram } from './helpers/create-test-program.js';
+import { getPrismaExpressions } from './helpers/get-prisma-expressions.js';
 
 const FIXTURE_PATH = 'src/tests/ast/v7/fixtures/prisma-client-detection.ts';
 
@@ -22,22 +21,13 @@ describe('Prisma Client Detection', () => {
     expect(callExpressions).toHaveLength(3);
   });
 
-  it('should be valid prisma calls', () => {
-    const prismaExpressions = [];
+  const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-    for (const expression of callExpressions) {
-      const isValid = isPrismaExpression(expression, program, astUtils);
-
-      // Skip non-prisma calls, using typeChecker to avoid false positives
-      if (!isValid) continue;
-
-      const prismaExpression = convertToPrismaExpression(expression, program, astUtils);
-
-      prismaExpressions.push(prismaExpression);
-    }
-
+  it('should find all prisma expressions', () => {
     expect(prismaExpressions).toHaveLength(2); // If everything is valid, we should have 2 prisma expressions, third one is not a Prisma Client
+  });
 
+  it('should be valid prisma calls', () => {
     expect(prismaExpressions[0]).toEqual(
       expect.objectContaining({
         method: 'findMany',

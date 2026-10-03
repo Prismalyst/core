@@ -2,10 +2,9 @@ import * as TS from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 import { createAstParser } from '../../../ast/parser/create-ast-parser.js';
-import { convertToPrismaExpression } from '../../../ast/prisma/convert-to-prisma-expression.js';
-import { isPrismaExpression } from '../../../ast/prisma/is-prisma-expression.js';
 import { createAstUtils } from '../../../ast/utils/create-ast-utils.js';
 import { createTestProgram } from './helpers/create-test-program.js';
+import { getPrismaExpressions } from './helpers/get-prisma-expressions.js';
 
 const FIXTURE_PATH = 'src/tests/ast/v7/fixtures/aliases.ts';
 
@@ -27,22 +26,13 @@ describe('Aliases', () => {
     expect(callExpressions).toHaveLength(5);
   });
 
+  const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
+
+  it('should find all prisma expressions', () => {
+    expect(prismaExpressions).toHaveLength(5);
+  });
+
   it('should be valid prisma calls', () => {
-    const prismaExpressions = [];
-
-    for (const expression of callExpressions) {
-      const isValid = isPrismaExpression(expression, program, astUtils);
-
-      // Skip non-prisma calls, using typeChecker to avoid false positives
-      if (!isValid) continue;
-
-      const prismaExpression = convertToPrismaExpression(expression, program, astUtils);
-
-      prismaExpressions.push(prismaExpression);
-    }
-
-    expect(prismaExpressions).toHaveLength(5); // If everything is valid, we should have 5 prisma expressions
-
     expect(prismaExpressions[0]).toEqual(
       expect.objectContaining({
         method: 'findMany',
