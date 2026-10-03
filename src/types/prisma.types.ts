@@ -25,6 +25,7 @@ export type PrismaContext = {
   isExpressionInsideTransaction: boolean;
   transactionType: TransactionType | null;
   clientType: ClientType;
+  model: string | null;
 };
 
 type Range = {
