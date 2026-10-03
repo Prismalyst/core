@@ -18,13 +18,13 @@ describe('Prisma Client Detection', () => {
   const callExpressions = findCallExpressions(sourceFile);
 
   it('should find all call expressions', () => {
-    expect(callExpressions).toHaveLength(3);
+    expect(callExpressions).toHaveLength(5);
   });
 
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
   it('should find all prisma expressions', () => {
-    expect(prismaExpressions).toHaveLength(2); // If everything is valid, we should have 2 prisma expressions, third one is not a Prisma Client
+    expect(prismaExpressions).toHaveLength(4); // If everything is valid, we should have 4 prisma expressions, 5th is not a Prisma Client
   });
 
   it('should be valid prisma calls', () => {
@@ -39,6 +39,35 @@ describe('Prisma Client Detection', () => {
       expect.objectContaining({
         method: 'findFirst',
         args: [],
+      }),
+    );
+
+    expect(prismaExpressions[2]).toEqual(
+      expect.objectContaining({
+        method: 'update',
+        args: [
+          {
+            where: {
+              id: 1,
+            },
+            data: {
+              name: 'username',
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(prismaExpressions[3]).toEqual(
+      expect.objectContaining({
+        method: 'delete',
+        args: [
+          {
+            where: {
+              id: 1,
+            },
+          },
+        ],
       }),
     );
   });
