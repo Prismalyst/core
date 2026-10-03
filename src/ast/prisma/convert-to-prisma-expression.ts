@@ -30,6 +30,8 @@ export function convertToPrismaExpression(
   const isExpressionInsideTransaction = prismaUtils.isInsidePrismaTransaction(node);
   const transactionType = prismaUtils.resolveTransactionType(node);
   const clientType = prismaUtils.resolveClientType(node, checker);
+  const model = prismaUtils.resolveModelName(node, checker);
+
   const isExpressionInsideLoop = nodeUtils.isInsideLoop(node);
   const isExpressionInsideFunction = nodeUtils.isInsideFunction(node);
   const isExpressionInsideClassMethod = nodeUtils.isInsideClassMethod(node);
@@ -64,6 +66,7 @@ export function convertToPrismaExpression(
       isExpressionInsideTransaction,
       transactionType,
       clientType,
+      model,
     },
     method,
     args: args.map((_, index) => nodeUtils.parseArgument(node, index)),

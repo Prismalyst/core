@@ -1,6 +1,11 @@
+import path from 'node:path';
 import type * as TS from 'typescript';
 
-import type { ClientType, TransactionType } from '../../types/prisma.types.js';
+import type {
+  ClientType,
+  PrismaNodeExpression,
+  TransactionType,
+} from '../../types/prisma.types.js';
 
 export function createPrismaUtils(ts: typeof TS) {
   function getTransactionType(node: TS.Node): TransactionType | null {
@@ -71,7 +76,7 @@ export function createPrismaUtils(ts: typeof TS) {
     }
   }
 
-  // TODO: Make it configurable
+  // TODO: Make it configurable + rewrite with node:path
   function isGeneratedPrismaFile(declarations: TS.Declaration[]) {
     return declarations.some((declaration) => {
       const fileName = declaration.getSourceFile().fileName;
@@ -100,12 +105,34 @@ export function createPrismaUtils(ts: typeof TS) {
     return findContainingTransactionType(node) !== null;
   }
 
+  function resolveModelName(node: PrismaNodeExpression, checker: TS.TypeChecker): string | null {
+    const symbol = checker.getSymbolAtLocation(node.expression);
+    const declarations = symbol?.getDeclarations() ?? [];
+
+    for (const declaration of declarations) {
+      const fileName = declaration.getSourceFile().fileName;
+      const modelsDirectory = path.join('prisma', 'models');
+      const sourceDirectory = path.dirname(fileName);
+
+      if (!sourceDirectory.includes(modelsDirectory)) continue;
+
+      const model = fileName.split(path.sep).at(-1)?.split('.')[0];
+
+      if (!model) continue;
+
+      return model;
+    }
+
+    return null;
+  }
+
   return {
     resolveTransactionType,
     resolveClientType,
     isGeneratedPrismaFile,
     isFloatingPrismaPromise,
     isInsidePrismaTransaction,
+    resolveModelName,
   };
 }
 
