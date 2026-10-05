@@ -19,17 +19,17 @@ describe('Prisma Client Detection', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find all call expressions', () => {
+  it('should find calls through real Prisma clients and the fake client', () => {
     expect(callExpressions).toHaveLength(5);
   });
 
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should find all prisma expressions', () => {
+  it('should recognize real Prisma client calls and exclude the fake client call', () => {
     expect(prismaExpressions).toHaveLength(4); // If everything is valid, we should have 4 prisma expressions, 5th is not a Prisma Client
   });
 
-  it('should be valid prisma calls', () => {
+  it('should detect methods and parse arguments through client and constructor aliases', () => {
     expect(prismaExpressions[0]).toEqual(
       expect.objectContaining({
         method: 'findMany',

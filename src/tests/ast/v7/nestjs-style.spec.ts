@@ -20,7 +20,7 @@ describe('NestJS Style', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find all call expressions', () => {
+  it('should find the constructor super call and all six service query calls', () => {
     expect(callExpressions).toHaveLength(7);
   });
 

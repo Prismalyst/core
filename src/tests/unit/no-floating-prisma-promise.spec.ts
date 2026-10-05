@@ -31,7 +31,7 @@ describe('noFloatingPrismaPromise', () => {
     { floating: false, awaited: false, expected: false },
     { floating: false, awaited: true, expected: false },
   ])(
-    'returns $expected for floating=$floating and awaited=$awaited',
+    'returns violation=$expected for floating=$floating and awaited=$awaited',
     ({ floating, awaited, expected }) => {
       expect(
         noFloatingPrismaPromise(
@@ -59,7 +59,7 @@ describe('noFloatingPrismaPromise', () => {
     ).toBe(false);
   });
 
-  it('uses the methods supplied by the rule', () => {
+  it('reports only methods in the custom rule configuration', () => {
     const customRule = { ...rule, methods: ['count'] };
     const context = { ...prismaContext, isFloatingPrismaPromise: true };
     expect(

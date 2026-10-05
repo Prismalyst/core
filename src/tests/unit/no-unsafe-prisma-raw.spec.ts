@@ -28,7 +28,7 @@ describe('noUnsafePrismaRaw', () => {
   it.each([
     { name: 'no arguments', args: [] },
     { name: 'an undefined argument', args: [undefined] },
-  ])('leaves $name to Prisma validation', ({ args }) => {
+  ])('ignores Prisma.raw calls with $name', ({ args }) => {
     expect(noUnsafePrismaRaw({ method: 'raw', args }, rule)).toBe(false);
   });
 

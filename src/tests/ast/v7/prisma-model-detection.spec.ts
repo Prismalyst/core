@@ -19,17 +19,17 @@ describe('Prisma Model Detection', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find all call expressions', () => {
+  it('should find the User, Post, and Comment query calls', () => {
     expect(callExpressions).toHaveLength(3);
   });
 
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should find all prisma expressions', () => {
+  it('should recognize queries on all three Prisma models', () => {
     expect(prismaExpressions).toHaveLength(3);
   });
 
-  it('should detect the model for each prisma call', () => {
+  it('should detect model names, methods, and arguments for User, Post, and Comment queries', () => {
     expect(prismaExpressions[0]).toEqual(
       expect.objectContaining({
         method: 'findMany',

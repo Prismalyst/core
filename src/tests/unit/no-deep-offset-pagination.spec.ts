@@ -25,7 +25,7 @@ describe('noDeepOffsetPagination', () => {
     { skip: 21, min: 10, max: 20, expected: true },
     { skip: 1001, min: -2000, max: 2000, expected: false },
   ])(
-    'returns $expected for skip=$skip with min=$min and max=$max',
+    'returns violation=$expected for skip=$skip with min=$min and max=$max',
     ({ skip, min, max, expected }) => {
       expect(
         noDeepOffsetPagination({ method: 'findMany', args: [{ skip }] }, rule, { min, max }),
@@ -48,7 +48,7 @@ describe('noDeepOffsetPagination', () => {
     ).toBe(false);
   });
 
-  it('uses the methods supplied by the rule', () => {
+  it('reports only methods in the custom rule configuration', () => {
     const customRule = { ...rule, methods: ['findFirst'] };
 
     expect(

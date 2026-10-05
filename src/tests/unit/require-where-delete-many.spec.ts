@@ -25,7 +25,7 @@ describe('requireWhereDeleteMany', () => {
     // Invalid where values are already rejected by Prisma's types.
     { name: 'a null where', args: [{ where: null }], expected: false },
     { name: 'a non-object where', args: [{ where: 42 }], expected: false },
-  ])('returns $expected for $name', ({ args, expected }) => {
+  ])('returns violation=$expected for deleteMany with $name', ({ args, expected }) => {
     expect(requireWhereDeleteMany({ method: 'deleteMany', args }, rule)).toBe(expected);
   });
 
@@ -33,7 +33,7 @@ describe('requireWhereDeleteMany', () => {
     expect(requireWhereDeleteMany({ method: 'findMany', args: [{}] }, rule)).toBe(false);
   });
 
-  it('uses the methods supplied by the rule', () => {
+  it('reports only methods in the custom rule configuration', () => {
     const customRule = { ...rule, methods: ['customMethod'] };
     expect(requireWhereDeleteMany({ method: 'customMethod', args: [{}] }, customRule)).toBe(true);
     expect(requireWhereDeleteMany({ method: 'deleteMany', args: [{}] }, customRule)).toBe(false);

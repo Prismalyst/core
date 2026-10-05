@@ -23,7 +23,7 @@ describe('noDisconnectInRequestFlow', () => {
     ).toBe(true);
   });
 
-  it.each(['$connect', 'findMany'])('ignores %s', (method) => {
+  it.each(['$connect', 'findMany'])('ignores the unconfigured method %s', (method) => {
     expect(
       noDisconnectInRequestFlow({ method, filename: '/src/users.service.ts' }, rule, options),
     ).toBe(false);
@@ -60,7 +60,7 @@ describe('noDisconnectInRequestFlow', () => {
     ).toBe(true);
   });
 
-  it('allows files matching any configured ignored path', () => {
+  it('allows disconnect in files matching any configured ignored path', () => {
     expect(
       noDisconnectInRequestFlow(
         { method: '$disconnect', filename: '/project/scripts/shutdown.ts' },
@@ -73,7 +73,7 @@ describe('noDisconnectInRequestFlow', () => {
     ).toBe(false);
   });
 
-  it('reports files that do not match ignored paths', () => {
+  it('reports disconnect in files that do not match ignored paths', () => {
     expect(
       noDisconnectInRequestFlow(
         { method: '$disconnect', filename: '/src/users.service.ts' },
@@ -86,7 +86,7 @@ describe('noDisconnectInRequestFlow', () => {
     ).toBe(true);
   });
 
-  it('honors ignored files even when allowInTests is disabled', () => {
+  it('allows disconnect in ignored test files even when allowInTests is disabled', () => {
     expect(
       noDisconnectInRequestFlow({ method: '$disconnect', filename: '/src/users.spec.ts' }, rule, {
         ignoredFiles: ['users.spec.ts'],
@@ -95,7 +95,7 @@ describe('noDisconnectInRequestFlow', () => {
     ).toBe(false);
   });
 
-  it('uses the methods supplied by the rule', () => {
+  it('reports only methods in the custom rule configuration', () => {
     const customRule = { ...rule, methods: ['customMethod'] };
     expect(
       noDisconnectInRequestFlow(

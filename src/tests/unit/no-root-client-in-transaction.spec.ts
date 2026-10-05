@@ -25,7 +25,7 @@ describe('noRootClientInTransaction', () => {
     { inside: true, transactionType: 'sequential', clientType: 'prisma', expected: false },
     { inside: true, transactionType: null, clientType: 'prisma', expected: false },
   ] as const)(
-    'returns $expected for inside=$inside, type=$transactionType, client=$clientType',
+    'returns violation=$expected for inside=$inside, type=$transactionType, client=$clientType',
     ({ inside, transactionType, clientType, expected }) => {
       expect(
         noRootClientInTransaction(
@@ -60,7 +60,7 @@ describe('noRootClientInTransaction', () => {
     ).toBe(false);
   });
 
-  it('uses the methods supplied by the rule', () => {
+  it('reports only methods in the custom rule configuration', () => {
     const customRule = { ...rule, methods: ['count'] };
     const context = {
       ...prismaContext,

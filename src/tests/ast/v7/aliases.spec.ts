@@ -20,21 +20,21 @@ describe('Aliases', () => {
   const variableStatements = findVariableStatements(sourceFile);
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find all variable statements', () => {
+  it('should find the client declaration and all four alias declarations', () => {
     expect(variableStatements).toHaveLength(5);
   });
 
-  it('should find all call expressions', () => {
+  it('should find all five calls through the client and its aliases', () => {
     expect(callExpressions).toHaveLength(5);
   });
 
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should find all prisma expressions', () => {
+  it('should recognize Prisma calls through direct and chained client aliases', () => {
     expect(prismaExpressions).toHaveLength(5);
   });
 
-  it('should be valid prisma calls', () => {
+  it('should detect methods and parse arguments for calls through client aliases', () => {
     expect(prismaExpressions[0]).toEqual(
       expect.objectContaining({
         method: 'findMany',

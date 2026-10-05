@@ -20,17 +20,17 @@ describe('Prisma Method Detection', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find all call expressions', () => {
+  it('should find calls to valid Prisma methods and notRealMethod', () => {
     expect(callExpressions).toHaveLength(4);
   });
 
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should find all prisma expressions', () => {
+  it('should recognize the three valid Prisma methods and exclude notRealMethod', () => {
     expect(prismaExpressions).toHaveLength(3);
   });
 
-  it('should detect the method for each prisma call', () => {
+  it('should detect findMany, findFirst, and deleteMany with no arguments', () => {
     expect(prismaExpressions[0]).toEqual(
       expect.objectContaining({
         method: 'findMany',

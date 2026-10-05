@@ -19,17 +19,17 @@ describe('Call Expressions', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find all call expressions', () => {
+  it('should find model queries, transaction calls, and client lifecycle calls', () => {
     expect(callExpressions).toHaveLength(10);
   });
 
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should find all prisma expressions', () => {
+  it('should recognize model, transaction, and client lifecycle calls as Prisma expressions', () => {
     expect(prismaExpressions).toHaveLength(10);
   });
 
-  it('should be valid prisma expressions', () => {
+  it('should detect query and client methods and parse model query arguments', () => {
     expect(prismaExpressions[0]).toEqual(
       expect.objectContaining({
         method: 'findMany',

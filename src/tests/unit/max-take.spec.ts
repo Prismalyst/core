@@ -19,7 +19,7 @@ describe('maxTake', () => {
     { take: 10, max: 10, expected: false },
     { take: 11, max: 10, expected: true },
     { take: 101, max: 200, expected: false },
-  ])('returns $expected for take=$take with max=$max', ({ take, max, expected }) => {
+  ])('returns violation=$expected for take=$take with max=$max', ({ take, max, expected }) => {
     expect(maxTake({ method: 'findMany', args: [{ take }] }, rule, { max })).toBe(expected);
   });
 
@@ -31,7 +31,7 @@ describe('maxTake', () => {
     expect(maxTake({ method: 'count', args: [] }, rule, { max: 100 })).toBe(false);
   });
 
-  it('uses the methods supplied by the rule', () => {
+  it('reports only methods in the custom rule configuration', () => {
     const customRule = { ...rule, methods: ['findFirst'] };
 
     expect(maxTake({ method: 'findFirst', args: [{ take: 101 }] }, customRule, { max: 100 })).toBe(

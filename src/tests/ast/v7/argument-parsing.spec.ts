@@ -19,17 +19,17 @@ describe('Argument Parsing', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find all call expressions', () => {
+  it('should find all eleven query calls in the argument parsing fixture', () => {
     expect(callExpressions).toHaveLength(11);
   });
 
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should find all prisma expressions', () => {
+  it('should recognize model queries and the unsafe raw SQL query as Prisma calls', () => {
     expect(prismaExpressions).toHaveLength(11);
   });
 
-  it('should parse all arguments', () => {
+  it('should parse literals, nested filters, variables, spreads, and SQL template arguments', () => {
     expect(prismaExpressions[0]).toEqual(
       expect.objectContaining({
         method: 'findMany',

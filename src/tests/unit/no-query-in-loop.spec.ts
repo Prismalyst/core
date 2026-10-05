@@ -20,7 +20,7 @@ const expressionContext = {
 };
 describe('noQueryInLoop', () => {
   it.each([true, false])(
-    'returns %s when isExpressionInsideLoop is %s',
+    'uses isExpressionInsideLoop=%s as the violation result',
     (isExpressionInsideLoop) => {
       expect(
         noQueryInLoop(
@@ -46,7 +46,7 @@ describe('noQueryInLoop', () => {
     ).toBe(false);
   });
 
-  it('uses the methods supplied by the rule', () => {
+  it('reports only methods in the custom rule configuration', () => {
     const customRule = { ...rule, methods: ['count'] };
     const context = { ...expressionContext, isExpressionInsideLoop: true };
     expect(noQueryInLoop({ method: 'count', expressionContext: context }, customRule)).toBe(true);

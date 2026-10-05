@@ -19,7 +19,7 @@ describe('Inheritance', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find all call expressions', () => {
+  it('should find all three queries through the inherited Prisma client', () => {
     expect(callExpressions).toHaveLength(3);
   });
 

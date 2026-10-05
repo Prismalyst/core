@@ -30,17 +30,20 @@ describe('noDynamicRawQuery', () => {
     expect(noDynamicRawQuery({ method: '$queryRawUnsafe', args }, rule)).toBe(false);
   });
 
-  it.each(['$queryRaw', '$executeRaw'])('allows a safe tagged query through %s', (method) => {
-    expect(noDynamicRawQuery({ method, args: [template] }, rule)).toBe(false);
-  });
+  it.each(['$queryRaw', '$executeRaw'])(
+    'ignores interpolated SQL passed to the unconfigured method %s',
+    (method) => {
+      expect(noDynamicRawQuery({ method, args: [template] }, rule)).toBe(false);
+    },
+  );
 
-  it('checks the query rather than its parameter values', () => {
+  it('allows a static SQL query with an interpolated template as a parameter value', () => {
     expect(
       noDynamicRawQuery({ method: '$queryRawUnsafe', args: ['SELECT $1', template] }, rule),
     ).toBe(false);
   });
 
-  it('uses the methods supplied by the rule', () => {
+  it('reports only methods in the custom rule configuration', () => {
     const customRule = { ...rule, methods: ['customMethod'] };
     expect(noDynamicRawQuery({ method: 'customMethod', args: [template] }, customRule)).toBe(true);
     expect(noDynamicRawQuery({ method: '$queryRawUnsafe', args: [template] }, customRule)).toBe(

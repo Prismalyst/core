@@ -107,7 +107,7 @@ describe('noPrismaClientInFunction', () => {
     },
   );
 
-  it('reports seed when the allowed function list is empty', () => {
+  it('reports client creation inside seed when the allowed function list is empty', () => {
     expect(
       noPrismaClientInFunction(
         {
@@ -120,7 +120,7 @@ describe('noPrismaClientInFunction', () => {
     ).toBe(true);
   });
 
-  it('matches allowed function names exactly', () => {
+  it('reports client creation inside seedUsers when only main and seed are allowed', () => {
     expect(
       noPrismaClientInFunction(
         {
@@ -133,7 +133,7 @@ describe('noPrismaClientInFunction', () => {
     ).toBe(true);
   });
 
-  it('allows a custom function name', () => {
+  it('allows client creation inside a custom allowed function', () => {
     expect(
       noPrismaClientInFunction(expression, rule, {
         ...options,
@@ -142,7 +142,7 @@ describe('noPrismaClientInFunction', () => {
     ).toBe(false);
   });
 
-  it('allows files matching a configured ignored path', () => {
+  it('allows client creation in files matching a configured ignored path', () => {
     expect(
       noPrismaClientInFunction({ ...expression, filename: '/project/scripts/setup.ts' }, rule, {
         ...options,
@@ -151,7 +151,7 @@ describe('noPrismaClientInFunction', () => {
     ).toBe(false);
   });
 
-  it('reports files that do not match ignored paths', () => {
+  it('reports client creation in functions whose files do not match ignored paths', () => {
     expect(
       noPrismaClientInFunction(expression, rule, {
         ...options,
@@ -185,7 +185,7 @@ describe('noPrismaClientInFunction', () => {
     ).toBe(true);
   });
 
-  it('honors ignored files even when allowInTests is disabled', () => {
+  it('allows client creation in ignored test files even when allowInTests is disabled', () => {
     expect(
       noPrismaClientInFunction({ ...expression, filename: '/src/users.spec.ts' }, rule, {
         ...options,

@@ -11,15 +11,21 @@ const rule: RuleWithoutFunction = {
 };
 
 describe('noUnsafeRawSQL', () => {
-  it.each(['$queryRawUnsafe', '$executeRawUnsafe'])('reports %s', (method) => {
-    expect(noUnsafeRawSQL({ method }, rule)).toBe(true);
-  });
+  it.each(['$queryRawUnsafe', '$executeRawUnsafe'])(
+    'reports calls to the configured unsafe SQL method %s',
+    (method) => {
+      expect(noUnsafeRawSQL({ method }, rule)).toBe(true);
+    },
+  );
 
-  it.each(['$queryRaw', '$executeRaw', 'findMany', 'raw'])('ignores %s', (method) => {
-    expect(noUnsafeRawSQL({ method }, rule)).toBe(false);
-  });
+  it.each(['$queryRaw', '$executeRaw', 'findMany', 'raw'])(
+    'ignores calls to the unconfigured method %s',
+    (method) => {
+      expect(noUnsafeRawSQL({ method }, rule)).toBe(false);
+    },
+  );
 
-  it('uses the methods supplied by the rule', () => {
+  it('reports only methods in the custom rule configuration', () => {
     const customRule = { ...rule, methods: ['$queryRaw'] };
     expect(noUnsafeRawSQL({ method: '$queryRaw' }, customRule)).toBe(true);
     expect(noUnsafeRawSQL({ method: '$queryRawUnsafe' }, customRule)).toBe(false);

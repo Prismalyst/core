@@ -19,17 +19,17 @@ describe('Property Access', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find all call expressions', () => {
+  it('should find calls through direct, nested, and class properties', () => {
     expect(callExpressions).toHaveLength(4);
   });
 
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should find all prisma expressions', () => {
+  it('should recognize Prisma calls through direct, nested, and class properties', () => {
     expect(prismaExpressions).toHaveLength(4);
   });
 
-  it('should be valid prisma calls', () => {
+  it('should detect findMany with no arguments through each property access path', () => {
     for (const prismaExpression of prismaExpressions) {
       expect(prismaExpression).toEqual(
         expect.objectContaining({

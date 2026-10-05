@@ -25,7 +25,7 @@ describe('requireWhereUpdateMany', () => {
     // Invalid where values are already rejected by Prisma's types.
     { name: 'a null where', args: [{ where: null }], expected: false },
     { name: 'a non-object where', args: [{ where: 42 }], expected: false },
-  ])('returns $expected for $name', ({ args, expected }) => {
+  ])('returns violation=$expected for updateMany with $name', ({ args, expected }) => {
     expect(requireWhereUpdateMany({ method: 'updateMany', args }, rule)).toBe(expected);
   });
 
@@ -33,7 +33,7 @@ describe('requireWhereUpdateMany', () => {
     expect(requireWhereUpdateMany({ method: 'findMany', args: [{}] }, rule)).toBe(false);
   });
 
-  it('uses the methods supplied by the rule', () => {
+  it('reports only methods in the custom rule configuration', () => {
     const customRule = { ...rule, methods: ['customMethod'] };
     expect(requireWhereUpdateMany({ method: 'customMethod', args: [{}] }, customRule)).toBe(true);
     expect(requireWhereUpdateMany({ method: 'updateMany', args: [{}] }, customRule)).toBe(false);
