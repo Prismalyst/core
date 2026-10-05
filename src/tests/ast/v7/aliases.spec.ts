@@ -13,7 +13,9 @@ describe('Aliases', () => {
 
   const { findVariableStatements, findCallExpressions } = createAstParser(TS);
 
-  const astUtils = createAstUtils(TS);
+  const checker = program.getTypeChecker();
+
+  const astUtils = createAstUtils(TS, checker);
 
   const variableStatements = findVariableStatements(sourceFile);
   const callExpressions = findCallExpressions(sourceFile);

@@ -13,7 +13,9 @@ describe('Call Expressions', () => {
 
   const { findCallExpressions } = createAstParser(TS);
 
-  const astUtils = createAstUtils(TS);
+  const checker = program.getTypeChecker();
+
+  const astUtils = createAstUtils(TS, checker);
 
   const callExpressions = findCallExpressions(sourceFile);
 
