@@ -7,9 +7,38 @@ export type AstObject = {
 export type AstValue =
   AstObject | string | number | boolean | null | undefined | AstValue[] | TS.Expression;
 
-export type AstKind = "template"
+export type AstTypeValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | {
+      kind: 'type';
+      type: 'string' | 'number' | 'boolean' | 'unknown' | 'null' | 'undefined';
+    }
+  | {
+      kind: 'object';
+      properties: Record<string, AstTypeValue>;
+    }
+  | {
+      kind: 'array';
+      element: AstTypeValue;
+    }
+  | {
+      kind: 'union';
+      types: AstTypeValue[];
+    };
 
-export type NormalizedAstNode = {
-  kind: AstKind;
+type TemplateSpan = { name: string; value?: unknown };
+
+export type TemplateAstNode = {
+  kind: 'template';
   raw: string;
+  templateSpans: TemplateSpan[];
+};
+
+export type SpreadAstNode = {
+  kind: 'spread';
+  expression: TS.Expression;
 };
