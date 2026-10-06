@@ -11,6 +11,10 @@ export function createNodeUtils(ts: typeof TS, checker: TS.TypeChecker) {
     return ts.isPropertyAccessExpression(node);
   }
 
+  function isElementAccessExpression(node: TS.Node) {
+    return ts.isElementAccessExpression(node);
+  }
+
   function isNewExpression(node: TS.Node) {
     return ts.isNewExpression(node);
   }
@@ -399,6 +403,7 @@ export function createNodeUtils(ts: typeof TS, checker: TS.TypeChecker) {
   return {
     isCallExpression,
     isPropertyAccessExpression,
+    isElementAccessExpression,
     isNewExpression,
     getPropertyName,
     resolveAliasedSymbol,
