@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { removeQuotes } from '../../ast/prisma/utils/remove-quotes.js';
+import { removeQuotes } from '../../../ast/prisma/utils/remove-quotes.js';
 
 describe('removeQuotes', () => {
   it.each(['"', "'", '`'])('removes matching %s quotes', (quote) => {
