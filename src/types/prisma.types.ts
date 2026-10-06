@@ -4,7 +4,7 @@ export type TransactionType = 'interactive' | 'sequential';
 export type ClientType = 'prisma' | 'transaction' | 'unknown';
 
 export type PrismaExpressionExpression = TS.CallExpression & {
-  expression: TS.PropertyAccessExpression;
+  expression: TS.PropertyAccessExpression | TS.ElementAccessExpression;
 };
 
 export type PrismaClientExpression = TS.NewExpression;
