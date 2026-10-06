@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
-import { noUnsafeRawSQL } from '../../rules/list/no-unsafe-raw-sql.js';
+import { noUnsafeRawSQL } from '../../../rules/list/no-unsafe-raw-sql.js';
 
 const rule: RuleWithoutFunction = {
   name: 'no-unsafe-raw-sql',

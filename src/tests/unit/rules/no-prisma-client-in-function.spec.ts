@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
-import { noPrismaClientInFunction } from '../../rules/list/no-prisma-client-in-function.js';
+import { noPrismaClientInFunction } from '../../../rules/list/no-prisma-client-in-function.js';
 
 const rule: RuleWithoutFunction = {
   name: 'no-prisma-client-in-function',

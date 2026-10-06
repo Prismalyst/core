@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
-import { noDeepOffsetPagination } from '../../rules/list/no-deep-offset-pagination.js';
+import { noDeepOffsetPagination } from '../../../rules/list/no-deep-offset-pagination.js';
 
 const rule: RuleWithoutFunction = {
   name: 'no-deep-offset-pagination',

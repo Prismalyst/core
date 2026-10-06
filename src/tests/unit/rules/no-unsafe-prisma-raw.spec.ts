@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
-import { noUnsafePrismaRaw } from '../../rules/list/no-unsafe-prisma-raw.js';
+import { noUnsafePrismaRaw } from '../../../rules/list/no-unsafe-prisma-raw.js';
 
 const rule: RuleWithoutFunction = {
   name: 'no-unsafe-prisma-raw',
