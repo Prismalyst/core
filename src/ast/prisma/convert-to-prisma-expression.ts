@@ -3,13 +3,14 @@ import type * as TS from 'typescript';
 import { PrismaExpression, PrismaNodeExpression } from '../../types/prisma.types.js';
 
 import { AstUtils } from '../utils/create-ast-utils.js';
+import { defineMethod } from './utils/define-method.js';
 
 export function convertToPrismaExpression(
   node: PrismaNodeExpression,
   program: TS.Program,
   { node: nodeUtils, prisma: prismaUtils }: AstUtils,
 ): PrismaExpression {
-  const method = nodeUtils.isNewExpression(node) ? 'PrismaClient' : node.expression.name.text;
+  const method = defineMethod(node, nodeUtils);
 
   const { line: startLine, character: startCharacter } = node
     .getSourceFile()
