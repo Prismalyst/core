@@ -3,6 +3,7 @@ import type * as TS from 'typescript';
 import { PrismaNodeExpression } from '../../types/prisma.types.js';
 
 import { AstUtils } from '../utils/create-ast-utils.js';
+import { removeQuotes } from './utils/remove-quotes.js';
 
 import { PRISMA_METHODS } from '../../constants/prisma-methods.constants.js';
 
@@ -12,21 +13,44 @@ export function isPrismaExpression(
   { node: nodeUtils, prisma: prismaUtils }: AstUtils,
 ): node is PrismaNodeExpression {
   if (nodeUtils.isCallExpression(node)) {
-    if (!nodeUtils.isPropertyAccessExpression(node.expression)) return false;
+    const isPropertyAccess = nodeUtils.isPropertyAccessExpression(node.expression);
+    const isElementAccess = nodeUtils.isElementAccessExpression(node.expression);
 
-    const methodNode = node.expression.name;
-    const method = methodNode.text;
+    if (isPropertyAccess) {
+      const methodNode = node.expression.name;
+      const method = methodNode.text;
 
-    if (!PRISMA_METHODS.has(method)) return false;
+      if (!PRISMA_METHODS.has(method)) {
+        return false;
+      }
 
-    const checker = program.getTypeChecker();
+      const checker = program.getTypeChecker();
 
-    const symbol = checker.getSymbolAtLocation(methodNode);
-    const declarations = symbol?.getDeclarations() ?? [];
+      const symbol = checker.getSymbolAtLocation(methodNode);
+      const declarations = symbol?.getDeclarations() ?? [];
 
-    const isGeneratedPrismaMethod = prismaUtils.isGeneratedPrismaFile(declarations);
+      const isGeneratedPrismaMethod = prismaUtils.isGeneratedPrismaFile(declarations);
 
-    if (isGeneratedPrismaMethod) return true;
+      if (isGeneratedPrismaMethod) return true;
+    }
+
+    if (isElementAccess) {
+      const methodNode = node.expression.argumentExpression;
+      const method = removeQuotes(methodNode.getText());
+
+      if (!PRISMA_METHODS.has(method)) {
+        return false;
+      }
+
+      const checker = program.getTypeChecker();
+
+      const symbol = checker.getSymbolAtLocation(methodNode);
+      const declarations = symbol?.getDeclarations() ?? [];
+
+      const isGeneratedPrismaMethod = prismaUtils.isGeneratedPrismaFile(declarations);
+
+      if (isGeneratedPrismaMethod) return true;
+    }
   }
 
   if (nodeUtils.isNewExpression(node)) {

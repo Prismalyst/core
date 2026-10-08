@@ -4,6 +4,8 @@ import { PrismaNodeExpression } from '../../../types/prisma.types.js';
 
 import { AstUtils } from '../../utils/create-ast-utils.js';
 
+import { removeQuotes } from './remove-quotes.js';
+
 function isPropertyAccess(
   expression: TS.PropertyAccessExpression | TS.ElementAccessExpression,
   nodeUtils: AstUtils['node'],
@@ -25,7 +27,7 @@ export function defineMethod(node: PrismaNodeExpression, nodeUtils: AstUtils['no
 
   if (isPropertyAccess(node.expression, nodeUtils)) return node.expression.name.text;
   if (isElementAccess(node.expression, nodeUtils))
-    return node.expression.argumentExpression.getText();
+    return removeQuotes(node.expression.argumentExpression.getText());
 
   return 'unknown';
 }

@@ -52,28 +52,34 @@ export function createPrismaUtils(ts: typeof TS) {
   }
 
   function resolveClientType(node: TS.Node, checker: TS.TypeChecker): ClientType {
-    if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression)) {
-      return 'unknown';
-    }
+    if (!ts.isCallExpression(node)) return 'unknown';
 
-    let receiver = node.expression.expression;
+    if (
+      ts.isPropertyAccessExpression(node.expression) ||
+      ts.isElementAccessExpression(node.expression)
+    ) {
+      let receiver = node.expression.expression;
 
-    while (true) {
-      const type = checker.getTypeAtLocation(receiver);
-      const connect = checker.getPropertyOfType(type, '$connect');
-      const queryRaw = checker.getPropertyOfType(type, '$queryRaw');
+      while (true) {
+        const type = checker.getTypeAtLocation(receiver);
+        const connect = checker.getPropertyOfType(type, '$connect');
+        const queryRaw = checker.getPropertyOfType(type, '$queryRaw');
 
-      if (isGeneratedPrismaFile(connect?.getDeclarations() ?? [])) return 'prisma';
+        if (isGeneratedPrismaFile(connect?.getDeclarations() ?? [])) return 'prisma';
 
-      // Transaction clients retain query methods but omit $connect.
-      if (!connect && isGeneratedPrismaFile(queryRaw?.getDeclarations() ?? [])) {
-        return 'transaction';
+        // Transaction clients retain query methods but omit $connect.
+        if (!connect && isGeneratedPrismaFile(queryRaw?.getDeclarations() ?? [])) {
+          return 'transaction';
+        }
+
+        if (!ts.isPropertyAccessExpression(receiver) && !ts.isElementAccessExpression(receiver))
+          return 'unknown';
+
+        receiver = receiver.expression;
       }
-
-      if (!ts.isPropertyAccessExpression(receiver)) return 'unknown';
-
-      receiver = receiver.expression;
     }
+
+    return 'unknown';
   }
 
   // TODO: Make it configurable + rewrite with node:path
@@ -106,8 +112,32 @@ export function createPrismaUtils(ts: typeof TS) {
   }
 
   function resolveModelName(node: PrismaNodeExpression, checker: TS.TypeChecker): string | null {
-    const symbol = checker.getSymbolAtLocation(node.expression);
-    const declarations = symbol?.getDeclarations() ?? [];
+    const expression = node.expression;
+
+    if (!ts.isPropertyAccessExpression(expression) && !ts.isElementAccessExpression(expression)) {
+      return null;
+    }
+
+    let propertyName: string;
+
+    if (ts.isPropertyAccessExpression(expression)) {
+      propertyName = expression.name.text;
+    } else {
+      const argument = expression.argumentExpression;
+
+      if (!ts.isStringLiteralLike(argument)) {
+        return null;
+      }
+
+      propertyName = argument.text;
+    }
+
+    const objectType = checker.getTypeAtLocation(expression.expression);
+    const symbol = checker.getPropertyOfType(objectType, propertyName);
+
+    if (!symbol) return null;
+
+    const declarations = symbol.getDeclarations() ?? [];
 
     for (const declaration of declarations) {
       const fileName = declaration.getSourceFile().fileName;
@@ -116,9 +146,7 @@ export function createPrismaUtils(ts: typeof TS) {
 
       if (!sourceDirectory.includes(modelsDirectory)) continue;
 
-      const model = fileName.split(path.sep).at(-1)?.split('.')[0];
-
-      if (!model) continue;
+      const model = path.parse(fileName).name;
 
       return model;
     }
