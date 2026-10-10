@@ -19,40 +19,17 @@ describe('Scope', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find all query, callback, and nested function calls', () => {
+  const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
+
+  it('should find 26 call expressions in the fixture', () => {
     expect(callExpressions).toHaveLength(26);
   });
 
-  const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
-
-  it('should recognize all nineteen Prisma queries and exclude other function calls', () => {
+  it('should recognize 19 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(19);
   });
 
-  // Query names follow their order in the fixture.
-  const [
-    topLevelQuery,
-    functionDeclarationQuery,
-    arrowFunctionQuery,
-    functionExpressionQuery,
-    topLevelIfQuery,
-    topLevelElseQuery,
-    functionIfQuery,
-    functionElseQuery,
-    forQuery,
-    forOfQuery,
-    forInQuery,
-    whileQuery,
-    doWhileQuery,
-    mapCallbackQuery,
-    promiseCallbackQuery,
-    outerFunctionQuery,
-    nestedFunctionQuery,
-    nestedArrowQuery,
-    functionInsideLoopQuery,
-  ] = prismaExpressions;
-
-  const topLevelContext = {
+  const expressionContext = {
     isExpressionInsideLoop: false,
     isExpressionInsideFunction: false,
     isExpressionInsideClassMethod: false,
@@ -61,215 +38,262 @@ describe('Scope', () => {
     parentMethodName: null,
   };
 
-  const functionContext = {
-    ...topLevelContext,
-    isExpressionInsideFunction: true,
+  const prismaContext = {
+    isFloatingPrismaPromise: false,
+    isExpressionInsideTransaction: false,
+    transactionType: null,
+    clientType: 'prisma',
+    model: 'User',
   };
 
-  const loopContext = {
-    ...topLevelContext,
-    isExpressionInsideLoop: true,
-  };
-
-  it('should detect top-level await outside functions and loops', () => {
-    expect(topLevelQuery?.expressionContext).toEqual(topLevelContext);
+  it('should detect the expected parameters for the top-level query', () => {
+    // await prisma.user.findMany()
+    expect(prismaExpressions[0]).toEqual(
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
+    );
   });
 
-  describe('Function scope', () => {
-    it('should detect the parent name of a function declaration', () => {
-      expect(functionDeclarationQuery?.expressionContext).toEqual({
-        ...functionContext,
-        parentFunctionName: 'loadUsers',
-      });
-    });
-
-    it('should detect an arrow function without a parent function name', () => {
-      expect(arrowFunctionQuery?.expressionContext).toEqual(functionContext);
-    });
-
-    it('should detect an anonymous function expression without a parent function name', () => {
-      expect(functionExpressionQuery?.expressionContext).toEqual(functionContext);
-    });
+  it('should detect the expected parameters for the function declaration', () => {
+    // await prisma.user.findMany()
+    expect(prismaExpressions[1]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [],
+        prismaContext,
+        expressionContext: {
+          ...expressionContext,
+          isExpressionInsideFunction: true,
+          parentFunctionName: 'loadUsers',
+        },
+      }),
+    );
   });
 
-  describe('Conditional blocks', () => {
-    it('should keep top-level if and else branches outside function scope', () => {
-      expect(topLevelIfQuery?.expressionContext).toEqual(topLevelContext);
-      expect(topLevelElseQuery?.expressionContext).toEqual(topLevelContext);
-    });
-
-    it('should preserve the enclosing function scope in if and else branches', () => {
-      const expectedContext = {
-        ...functionContext,
-        parentFunctionName: 'loadUsersByStatus',
-      };
-
-      expect(functionIfQuery?.expressionContext).toEqual(expectedContext);
-      expect(functionElseQuery?.expressionContext).toEqual(expectedContext);
-    });
+  it('should detect the expected parameters for the arrow function', () => {
+    // await prisma.user.findMany()
+    expect(prismaExpressions[2]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [],
+        prismaContext,
+        expressionContext: { ...expressionContext, isExpressionInsideFunction: true },
+      }),
+    );
   });
 
-  describe('Loops', () => {
-    it('should detect a query inside a for loop', () => {
-      expect(forQuery?.expressionContext).toEqual(loopContext);
-    });
-
-    it('should detect a query inside a for...of loop', () => {
-      expect(forOfQuery?.expressionContext).toEqual(loopContext);
-    });
-
-    it('should detect a query inside a for...in loop', () => {
-      expect(forInQuery?.expressionContext).toEqual(loopContext);
-    });
-
-    it('should detect a query inside a while loop', () => {
-      expect(whileQuery?.expressionContext).toEqual(loopContext);
-    });
-
-    it('should detect a query inside a do...while loop', () => {
-      expect(doWhileQuery?.expressionContext).toEqual(loopContext);
-    });
+  it('should detect the expected parameters for the function expression', () => {
+    // await prisma.user.findMany()
+    expect(prismaExpressions[3]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [],
+        prismaContext,
+        expressionContext: { ...expressionContext, isExpressionInsideFunction: true },
+      }),
+    );
   });
 
-  describe('Callbacks', () => {
-    it('should treat a map callback as both a function and a loop', () => {
-      expect(mapCallbackQuery?.expressionContext).toEqual({
-        ...functionContext,
-        isExpressionInsideLoop: true,
-      });
-    });
-
-    it('should treat a Promise callback as a function outside loops', () => {
-      expect(promiseCallbackQuery?.expressionContext).toEqual(functionContext);
-    });
+  it('should detect the expected parameters for the top-level if branch', () => {
+    // await prisma.user.findMany({ where: { active: true } })
+    expect(prismaExpressions[4]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [{ where: { active: true } }],
+        prismaContext,
+        expressionContext,
+      }),
+    );
   });
 
-  describe('Nested functions', () => {
-    it('should preserve the outer function name for its own query', () => {
-      expect(outerFunctionQuery?.expressionContext).toEqual({
-        ...functionContext,
-        parentFunctionName: 'loadUsersWithNestedFunctions',
-      });
-    });
-
-    it('should use the nearest function declaration as the parent', () => {
-      expect(nestedFunctionQuery?.expressionContext).toEqual({
-        ...functionContext,
-        parentFunctionName: 'loadPosts',
-      });
-    });
-
-    it('should leave the parent name null for a nested arrow function', () => {
-      expect(nestedArrowQuery?.expressionContext).toEqual(functionContext);
-    });
-
-    it('should stop loop detection at a nested function boundary', () => {
-      expect(functionInsideLoopQuery?.expressionContext).toEqual({
-        ...functionContext,
-        parentFunctionName: 'loadUserInsideLoop',
-      });
-    });
+  it('should detect the expected parameters for the top-level else branch', () => {
+    // await prisma.user.findMany({ where: { active: false } })
+    expect(prismaExpressions[5]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [{ where: { active: false } }],
+        prismaContext,
+        expressionContext,
+      }),
+    );
   });
 
-  describe('Prisma query details', () => {
-    it('should detect User findMany calls without arguments across scopes', () => {
-      const queries = [
-        topLevelQuery,
-        functionDeclarationQuery,
-        arrowFunctionQuery,
-        functionExpressionQuery,
-        forQuery,
-        whileQuery,
-        doWhileQuery,
-        outerFunctionQuery,
-      ];
+  it('should detect the expected parameters for the function if branch', () => {
+    // await prisma.user.findMany({ where: { active: true } })
+    expect(prismaExpressions[6]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [{ where: { active: true } }],
+        prismaContext,
+        expressionContext: {
+          ...expressionContext,
+          isExpressionInsideFunction: true,
+          parentFunctionName: 'loadUsersByStatus',
+        },
+      }),
+    );
+  });
 
-      for (const query of queries) {
-        expect(query).toEqual(
-          expect.objectContaining({
-            method: 'findMany',
-            args: [],
-            prismaContext: expect.objectContaining({ model: 'User' }),
-          }),
-        );
-      }
-    });
+  it('should detect the expected parameters for the function else branch', () => {
+    // await prisma.user.findMany({ where: { active: false } })
+    expect(prismaExpressions[7]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [{ where: { active: false } }],
+        prismaContext,
+        expressionContext: {
+          ...expressionContext,
+          isExpressionInsideFunction: true,
+          parentFunctionName: 'loadUsersByStatus',
+        },
+      }),
+    );
+  });
 
-    it('should parse active filters in top-level and function branches', () => {
-      for (const query of [topLevelIfQuery, functionIfQuery]) {
-        expect(query).toEqual(
-          expect.objectContaining({
-            method: 'findMany',
-            args: [{ where: { active: true } }],
-            prismaContext: expect.objectContaining({ model: 'User' }),
-          }),
-        );
-      }
+  it('should detect the expected parameters for the for loop', () => {
+    // await prisma.user.findMany()
+    expect(prismaExpressions[8]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [],
+        prismaContext,
+        expressionContext: { ...expressionContext, isExpressionInsideLoop: true },
+      }),
+    );
+  });
 
-      for (const query of [topLevelElseQuery, functionElseQuery]) {
-        expect(query).toEqual(
-          expect.objectContaining({
-            method: 'findMany',
-            args: [{ where: { active: false } }],
-            prismaContext: expect.objectContaining({ model: 'User' }),
-          }),
-        );
-      }
-    });
+  it('should detect the expected parameters for the for...of loop', () => {
+    // await prisma.user.findUnique({ where: { id: userId } })
+    expect(prismaExpressions[9]).toEqual(
+      expect.objectContaining({
+        method: 'findUnique',
+        args: [{ where: { id: { kind: 'type', type: 'number' } } }],
+        prismaContext,
+        expressionContext: { ...expressionContext, isExpressionInsideLoop: true },
+      }),
+    );
+  });
 
-    it('should parse numeric IDs in loop, callback, and nested function queries', () => {
-      const queries = [forOfQuery, mapCallbackQuery, promiseCallbackQuery, functionInsideLoopQuery];
+  it('should detect the expected parameters for the for...in loop', () => {
+    // await prisma.user.findMany({ where: { name } })
+    expect(prismaExpressions[10]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [{ where: { name: { kind: 'type', type: 'string' } } }],
+        prismaContext,
+        expressionContext: { ...expressionContext, isExpressionInsideLoop: true },
+      }),
+    );
+  });
 
-      for (const query of queries) {
-        expect(query).toEqual(
-          expect.objectContaining({
-            method: 'findUnique',
-            args: [{ where: { id: { kind: 'type', type: 'number' } } }],
-            prismaContext: expect.objectContaining({ model: 'User' }),
-          }),
-        );
-      }
-    });
+  it('should detect the expected parameters for the while loop', () => {
+    // await prisma.user.findMany()
+    expect(prismaExpressions[11]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [],
+        prismaContext,
+        expressionContext: { ...expressionContext, isExpressionInsideLoop: true },
+      }),
+    );
+  });
 
-    it('should parse the name filter in a for...in loop', () => {
-      expect(forInQuery).toEqual(
-        expect.objectContaining({
-          method: 'findMany',
-          args: [{ where: { name: { kind: 'type', type: 'string' } } }],
-          prismaContext: expect.objectContaining({ model: 'User' }),
-        }),
-      );
-    });
+  it('should detect the expected parameters for the do...while loop', () => {
+    // await prisma.user.findMany()
+    expect(prismaExpressions[12]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [],
+        prismaContext,
+        expressionContext: { ...expressionContext, isExpressionInsideLoop: true },
+      }),
+    );
+  });
 
-    it('should detect Post and Comment queries inside nested functions', () => {
-      expect(nestedFunctionQuery).toEqual(
-        expect.objectContaining({
-          method: 'findMany',
-          args: [],
-          prismaContext: expect.objectContaining({ model: 'Post' }),
-        }),
-      );
+  it('should detect the expected parameters for the map callback', () => {
+    // await prisma.user.findUnique({ where: { id: userId } })
+    expect(prismaExpressions[13]).toEqual(
+      expect.objectContaining({
+        method: 'findUnique',
+        args: [{ where: { id: { kind: 'type', type: 'number' } } }],
+        prismaContext,
+        expressionContext: {
+          ...expressionContext,
+          isExpressionInsideLoop: true,
+          isExpressionInsideFunction: true,
+        },
+      }),
+    );
+  });
 
-      expect(nestedArrowQuery).toEqual(
-        expect.objectContaining({
-          method: 'findMany',
-          args: [],
-          prismaContext: expect.objectContaining({ model: 'Comment' }),
-        }),
-      );
-    });
+  it('should detect the expected parameters for the Promise callback', () => {
+    // await prisma.user.findUnique({ where: { id: userId } })
+    expect(prismaExpressions[14]).toEqual(
+      expect.objectContaining({
+        method: 'findUnique',
+        args: [{ where: { id: { kind: 'type', type: 'number' } } }],
+        prismaContext,
+        expressionContext: { ...expressionContext, isExpressionInsideFunction: true },
+      }),
+    );
+  });
 
-    it('should detect awaited Prisma client queries outside transactions in every scope', () => {
-      for (const prismaExpression of prismaExpressions) {
-        expect(prismaExpression.prismaContext).toEqual(
-          expect.objectContaining({
-            isFloatingPrismaPromise: false,
-            isExpressionInsideTransaction: false,
-            transactionType: null,
-            clientType: 'prisma',
-          }),
-        );
-      }
-    });
+  it('should detect the expected parameters for the outer function', () => {
+    // await prisma.user.findMany()
+    expect(prismaExpressions[15]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [],
+        prismaContext,
+        expressionContext: {
+          ...expressionContext,
+          isExpressionInsideFunction: true,
+          parentFunctionName: 'loadUsersWithNestedFunctions',
+        },
+      }),
+    );
+  });
+
+  it('should detect the expected parameters for the nested function declaration', () => {
+    // await prisma.post.findMany()
+    expect(prismaExpressions[16]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [],
+        prismaContext: { ...prismaContext, model: 'Post' },
+        expressionContext: {
+          ...expressionContext,
+          isExpressionInsideFunction: true,
+          parentFunctionName: 'loadPosts',
+        },
+      }),
+    );
+  });
+
+  it('should detect the expected parameters for the nested arrow function', () => {
+    // await prisma.comment.findMany()
+    expect(prismaExpressions[17]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [],
+        prismaContext: { ...prismaContext, model: 'Comment' },
+        expressionContext: { ...expressionContext, isExpressionInsideFunction: true },
+      }),
+    );
+  });
+
+  it('should detect the expected parameters for the function declared inside a loop', () => {
+    // await prisma.user.findUnique({ where: { id: userId } })
+    expect(prismaExpressions[18]).toEqual(
+      expect.objectContaining({
+        method: 'findUnique',
+        args: [{ where: { id: { kind: 'type', type: 'number' } } }],
+        prismaContext,
+        expressionContext: {
+          ...expressionContext,
+          isExpressionInsideFunction: true,
+          parentFunctionName: 'loadUserInsideLoop',
+        },
+      }),
+    );
   });
 });

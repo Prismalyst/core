@@ -21,39 +21,49 @@ describe('Computed Properties', () => {
 
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should recognize three Prisma call expressions', () => {
+  it('should find 4 call expressions in the fixture', () => {
+    expect(callExpressions).toHaveLength(4);
+  });
+
+  it('should recognize 3 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(3);
   });
 
-  const expectedParameters = {
-    method: 'findMany',
-    args: [],
-    expressionContext: {
-      isExpressionInsideLoop: false,
-      isExpressionInsideFunction: false,
-      isExpressionInsideClassMethod: false,
-      isExpressionInsideAwaitExpression: true,
-      parentFunctionName: null,
-      parentMethodName: null,
-    },
-    prismaContext: {
-      isFloatingPrismaPromise: false,
-      isExpressionInsideTransaction: false,
-      transactionType: null,
-      clientType: 'prisma',
-      model: 'User',
-    },
+  const expressionContext = {
+    isExpressionInsideLoop: false,
+    isExpressionInsideFunction: false,
+    isExpressionInsideClassMethod: false,
+    isExpressionInsideAwaitExpression: true,
+    parentFunctionName: null,
+    parentMethodName: null,
+  };
+
+  const prismaContext = {
+    isFloatingPrismaPromise: false,
+    isExpressionInsideTransaction: false,
+    transactionType: null,
+    clientType: 'prisma',
+    model: 'User',
   };
 
   it('should detect the expected parameters for a dot-accessed model with a computed method', () => {
-    expect(prismaExpressions[0]).toEqual(expect.objectContaining(expectedParameters));
+    // await prisma.user['findMany']()
+    expect(prismaExpressions[0]).toEqual(
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
+    );
   });
 
   it('should detect the expected parameters for a computed model with a computed method', () => {
-    expect(prismaExpressions[1]).toEqual(expect.objectContaining(expectedParameters));
+    // await prisma['user']['findMany']()
+    expect(prismaExpressions[1]).toEqual(
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
+    );
   });
 
   it('should detect the expected parameters for a computed model with a dot-accessed method', () => {
-    expect(prismaExpressions[2]).toEqual(expect.objectContaining(expectedParameters));
+    // await prisma['user'].findMany()
+    expect(prismaExpressions[2]).toEqual(
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
+    );
   });
 });

@@ -20,36 +20,51 @@ describe('Prisma Method Detection', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find calls to valid Prisma methods and notRealMethod', () => {
+  const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
+
+  it('should find 4 call expressions in the fixture', () => {
     expect(callExpressions).toHaveLength(4);
   });
 
-  const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
-
-  it('should recognize the three valid Prisma methods and exclude notRealMethod', () => {
+  it('should recognize 3 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(3);
   });
 
-  it('should detect findMany, findFirst, and deleteMany with no arguments', () => {
+  const expressionContext = {
+    isExpressionInsideLoop: false,
+    isExpressionInsideFunction: false,
+    isExpressionInsideClassMethod: false,
+    isExpressionInsideAwaitExpression: true,
+    parentFunctionName: null,
+    parentMethodName: null,
+  };
+
+  const prismaContext = {
+    isFloatingPrismaPromise: false,
+    isExpressionInsideTransaction: false,
+    transactionType: null,
+    clientType: 'prisma',
+    model: 'User',
+  };
+
+  it('should detect the expected parameters for the findMany call', () => {
+    // await prisma.user.findMany()
     expect(prismaExpressions[0]).toEqual(
-      expect.objectContaining({
-        method: 'findMany',
-        args: [],
-      }),
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
     );
+  });
 
+  it('should detect the expected parameters for the findFirst call', () => {
+    // await prisma.user.findFirst()
     expect(prismaExpressions[1]).toEqual(
-      expect.objectContaining({
-        method: 'findFirst',
-        args: [],
-      }),
+      expect.objectContaining({ method: 'findFirst', args: [], prismaContext, expressionContext }),
     );
+  });
 
+  it('should detect the expected parameters for the deleteMany call', () => {
+    // await prisma.user.deleteMany()
     expect(prismaExpressions[2]).toEqual(
-      expect.objectContaining({
-        method: 'deleteMany',
-        args: [],
-      }),
+      expect.objectContaining({ method: 'deleteMany', args: [], prismaContext, expressionContext }),
     );
   });
 

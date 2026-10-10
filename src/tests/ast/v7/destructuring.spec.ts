@@ -21,11 +21,11 @@ describe('Destructuring', () => {
 
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should recognize five Prisma expressions including the transaction and destructured queries', () => {
+  it('should recognize 5 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(5);
   });
 
-  const topLevelContext = {
+  const expressionContext = {
     isExpressionInsideLoop: false,
     isExpressionInsideFunction: false,
     isExpressionInsideClassMethod: false,
@@ -43,75 +43,84 @@ describe('Destructuring', () => {
   };
 
   it('should detect the expected parameters for the destructured users delegate', () => {
+    // await users.findMany()
     expect(prismaExpressions[0]).toEqual(
-      expect.objectContaining({
-        method: 'findMany',
-        args: [],
-        expressionContext: topLevelContext,
-        prismaContext,
-      }),
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
     );
   });
 
   it('should detect the expected parameters for the destructured posts delegate', () => {
+    // await posts.findMany({
+    //   where: {
+    //     authorId: 1,
+    //   },
+    // })
     expect(prismaExpressions[1]).toEqual(
       expect.objectContaining({
         method: 'findMany',
         args: [{ where: { authorId: 1 } }],
-        expressionContext: topLevelContext,
-        prismaContext: {
-          ...prismaContext,
-          model: 'Post',
-        },
+        prismaContext: { ...prismaContext, model: 'Post' },
+        expressionContext,
       }),
     );
   });
 
   it('should detect the expected parameters for the interactive transaction call', () => {
+    // await prisma.$transaction(async (tx) => {
+    //   const { user: users, post: posts } = tx;
+    //
+    //   await users.findMany();
+    //   await posts.findMany({
+    //     where: {
+    //       authorId: 1,
+    //     },
+    //   });
+    // })
     expect(prismaExpressions[2]).toEqual(
       expect.objectContaining({
         method: '$transaction',
         args: [callExpressions[2]?.arguments[0]],
-        expressionContext: topLevelContext,
-        prismaContext: {
-          ...prismaContext,
-          transactionType: 'interactive',
-          model: null,
-        },
+        prismaContext: { ...prismaContext, transactionType: 'interactive', model: null },
+        expressionContext,
       }),
     );
   });
 
-  const transactionExpressionContext = {
-    ...topLevelContext,
-    isExpressionInsideFunction: true,
-  };
-
-  const transactionPrismaContext = {
-    ...prismaContext,
-    isExpressionInsideTransaction: true,
-    transactionType: 'interactive',
-    clientType: 'transaction',
-  };
-
   it('should detect the expected parameters for the users delegate destructured from tx', () => {
+    // await users.findMany()
     expect(prismaExpressions[3]).toEqual(
       expect.objectContaining({
         method: 'findMany',
         args: [],
-        expressionContext: transactionExpressionContext,
-        prismaContext: transactionPrismaContext,
+        prismaContext: {
+          ...prismaContext,
+          isExpressionInsideTransaction: true,
+          transactionType: 'interactive',
+          clientType: 'transaction',
+        },
+        expressionContext: { ...expressionContext, isExpressionInsideFunction: true },
       }),
     );
   });
 
   it('should detect the expected parameters for the posts delegate destructured from tx', () => {
+    // await posts.findMany({
+    //     where: {
+    //       authorId: 1,
+    //     },
+    //   })
     expect(prismaExpressions[4]).toEqual(
       expect.objectContaining({
         method: 'findMany',
         args: [{ where: { authorId: 1 } }],
-        expressionContext: transactionExpressionContext,
-        prismaContext: { ...transactionPrismaContext, model: 'Post' },
+        prismaContext: {
+          ...prismaContext,
+          isExpressionInsideTransaction: true,
+          transactionType: 'interactive',
+          clientType: 'transaction',
+          model: 'Post',
+        },
+        expressionContext: { ...expressionContext, isExpressionInsideFunction: true },
       }),
     );
   });

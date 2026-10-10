@@ -19,38 +19,56 @@ describe('Prisma Model Detection', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find the User, Post, and Comment query calls', () => {
-    expect(callExpressions).toHaveLength(3);
-  });
-
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should recognize queries on all three Prisma models', () => {
+  it('should recognize 3 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(3);
   });
 
-  it('should detect model names, methods, and arguments for User, Post, and Comment queries', () => {
-    expect(prismaExpressions[0]).toEqual(
-      expect.objectContaining({
-        method: 'findMany',
-        args: [],
-        prismaContext: expect.objectContaining({ model: 'User' }),
-      }),
-    );
+  const expressionContext = {
+    isExpressionInsideLoop: false,
+    isExpressionInsideFunction: false,
+    isExpressionInsideClassMethod: false,
+    isExpressionInsideAwaitExpression: true,
+    parentFunctionName: null,
+    parentMethodName: null,
+  };
 
+  const prismaContext = {
+    isFloatingPrismaPromise: false,
+    isExpressionInsideTransaction: false,
+    transactionType: null,
+    clientType: 'prisma',
+    model: 'User',
+  };
+
+  it('should detect the expected parameters for the User query', () => {
+    // await prisma.user.findMany()
+    expect(prismaExpressions[0]).toEqual(
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
+    );
+  });
+
+  it('should detect the expected parameters for the Post query', () => {
+    // await prisma.post.findMany()
     expect(prismaExpressions[1]).toEqual(
       expect.objectContaining({
         method: 'findMany',
         args: [],
-        prismaContext: expect.objectContaining({ model: 'Post' }),
+        prismaContext: { ...prismaContext, model: 'Post' },
+        expressionContext,
       }),
     );
+  });
 
+  it('should detect the expected parameters for the Comment creation', () => {
+    // await prisma.comment.create({ data: { authorId: 1, postId: 1, body: 'x' } })
     expect(prismaExpressions[2]).toEqual(
       expect.objectContaining({
         method: 'create',
         args: [{ data: { authorId: 1, postId: 1, body: 'x' } }],
-        prismaContext: expect.objectContaining({ model: 'Comment' }),
+        prismaContext: { ...prismaContext, model: 'Comment' },
+        expressionContext,
       }),
     );
   });

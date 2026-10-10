@@ -19,24 +19,63 @@ describe('Property Access', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find calls through direct, nested, and class properties', () => {
-    expect(callExpressions).toHaveLength(4);
-  });
-
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should recognize Prisma calls through direct, nested, and class properties', () => {
+  it('should recognize 4 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(4);
   });
 
-  it('should detect findMany with no arguments through each property access path', () => {
-    for (const prismaExpression of prismaExpressions) {
-      expect(prismaExpression).toEqual(
-        expect.objectContaining({
-          method: 'findMany',
-          args: [],
-        }),
-      );
-    }
+  const expressionContext = {
+    isExpressionInsideLoop: false,
+    isExpressionInsideFunction: false,
+    isExpressionInsideClassMethod: false,
+    isExpressionInsideAwaitExpression: true,
+    parentFunctionName: null,
+    parentMethodName: null,
+  };
+
+  const prismaContext = {
+    isFloatingPrismaPromise: false,
+    isExpressionInsideTransaction: false,
+    transactionType: null,
+    clientType: 'prisma',
+    model: 'User',
+  };
+
+  it('should detect the expected parameters for prisma.user.findMany', () => {
+    // await prisma.user.findMany()
+    expect(prismaExpressions[0]).toEqual(
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
+    );
+  });
+
+  it('should detect the expected parameters for service.prisma.user.findMany', () => {
+    // await service.prisma.user.findMany()
+    expect(prismaExpressions[1]).toEqual(
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
+    );
+  });
+
+  it('should detect the expected parameters for container.services.prisma.user.findMany', () => {
+    // await container.services.prisma.user.findMany()
+    expect(prismaExpressions[2]).toEqual(
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
+    );
+  });
+
+  it('should detect the expected parameters for this.prisma.user.findMany', () => {
+    // await this.prisma.user.findMany()
+    expect(prismaExpressions[3]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [],
+        prismaContext,
+        expressionContext: {
+          ...expressionContext,
+          isExpressionInsideClassMethod: true,
+          parentMethodName: 'findAllUsers',
+        },
+      }),
+    );
   });
 });

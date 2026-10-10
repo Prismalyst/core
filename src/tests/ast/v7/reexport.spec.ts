@@ -19,67 +19,56 @@ describe('Re-export', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find all three queries through the re-exported Prisma client', () => {
-    expect(callExpressions).toHaveLength(3);
-  });
-
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should recognize all three queries as Prisma expressions through the re-export', () => {
+  it('should recognize 3 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(3);
   });
 
-  it('should detect the expected method, arguments, and context for every expression', () => {
-    const topLevelContext = {
-      isExpressionInsideLoop: false,
-      isExpressionInsideFunction: false,
-      isExpressionInsideClassMethod: false,
-      isExpressionInsideAwaitExpression: true,
-      parentFunctionName: null,
-      parentMethodName: null,
-    };
+  const expressionContext = {
+    isExpressionInsideLoop: false,
+    isExpressionInsideFunction: false,
+    isExpressionInsideClassMethod: false,
+    isExpressionInsideAwaitExpression: true,
+    parentFunctionName: null,
+    parentMethodName: null,
+  };
 
-    const prismaContext = {
-      isFloatingPrismaPromise: false,
-      isExpressionInsideTransaction: false,
-      transactionType: null,
-      clientType: 'prisma',
-      model: 'User',
-    };
+  const prismaContext = {
+    isFloatingPrismaPromise: false,
+    isExpressionInsideTransaction: false,
+    transactionType: null,
+    clientType: 'prisma',
+    model: 'User',
+  };
 
-    // User query through the re-exported client.
+  it('should detect the expected parameters for the re-exported User query', () => {
+    // await prisma.user.findMany()
     expect(prismaExpressions[0]).toEqual(
-      expect.objectContaining({
-        method: 'findMany',
-        args: [],
-        expressionContext: topLevelContext,
-        prismaContext,
-      }),
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
     );
+  });
 
-    // Post query through the re-exported client.
+  it('should detect the expected parameters for the re-exported Post query', () => {
+    // await prisma.post.findMany()
     expect(prismaExpressions[1]).toEqual(
       expect.objectContaining({
         method: 'findMany',
         args: [],
-        expressionContext: topLevelContext,
-        prismaContext: {
-          ...prismaContext,
-          model: 'Post',
-        },
+        prismaContext: { ...prismaContext, model: 'Post' },
+        expressionContext,
       }),
     );
+  });
 
-    // Comment creation through the re-exported client.
+  it('should detect the expected parameters for the re-exported Comment creation', () => {
+    // await prisma.comment.create({ data: { authorId: 1, postId: 1, body: 'x' } })
     expect(prismaExpressions[2]).toEqual(
       expect.objectContaining({
         method: 'create',
         args: [{ data: { authorId: 1, postId: 1, body: 'x' } }],
-        expressionContext: topLevelContext,
-        prismaContext: {
-          ...prismaContext,
-          model: 'Comment',
-        },
+        prismaContext: { ...prismaContext, model: 'Comment' },
+        expressionContext,
       }),
     );
   });

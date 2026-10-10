@@ -21,7 +21,11 @@ describe('Wrapper Functions', () => {
 
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should recognize two Prisma queries through the client returned by getPrisma', () => {
+  it('should find 3 call expressions in the fixture', () => {
+    expect(callExpressions).toHaveLength(3);
+  });
+
+  it('should recognize 2 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(2);
   });
 
@@ -43,23 +47,24 @@ describe('Wrapper Functions', () => {
   };
 
   it('should detect the expected parameters for the user query through the returned client', () => {
+    // await prisma.user.findMany()
     expect(prismaExpressions[0]).toEqual(
-      expect.objectContaining({
-        method: 'findMany',
-        args: [],
-        expressionContext,
-        prismaContext,
-      }),
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
     );
   });
 
   it('should detect the expected parameters for the post query through the returned client', () => {
+    // await prisma.post.findMany({
+    //   where: {
+    //     authorId: 1,
+    //   },
+    // })
     expect(prismaExpressions[1]).toEqual(
       expect.objectContaining({
         method: 'findMany',
         args: [{ where: { authorId: 1 } }],
-        expressionContext,
         prismaContext: { ...prismaContext, model: 'Post' },
+        expressionContext,
       }),
     );
   });

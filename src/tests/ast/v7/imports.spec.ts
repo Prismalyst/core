@@ -19,36 +19,51 @@ describe('Imports', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find queries through both the named and aliased imports', () => {
-    expect(callExpressions).toHaveLength(2);
-  });
-
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should recognize both queries as Prisma expressions', () => {
+  it('should recognize 2 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(2);
   });
 
-  const [aliasedImportQuery, namedImportQuery] = prismaExpressions;
+  const expressionContext = {
+    isExpressionInsideLoop: false,
+    isExpressionInsideFunction: false,
+    isExpressionInsideClassMethod: false,
+    isExpressionInsideAwaitExpression: true,
+    parentFunctionName: null,
+    parentMethodName: null,
+  };
+
+  const prismaContext = {
+    isFloatingPrismaPromise: false,
+    isExpressionInsideTransaction: false,
+    transactionType: null,
+    clientType: 'prisma',
+    model: 'User',
+  };
 
   it('should detect a User findMany query through the aliased import', () => {
-    expect(aliasedImportQuery).toEqual(
+    // await prismaGenerated.user.findMany()
+    expect(prismaExpressions[0]).toEqual(
       expect.objectContaining({
-        node: callExpressions[0],
         method: 'findMany',
         args: [],
-        prismaContext: expect.objectContaining({ model: 'User', clientType: 'prisma' }),
+        node: callExpressions[0],
+        prismaContext,
+        expressionContext,
       }),
     );
   });
 
   it('should detect a User findMany query through the named import', () => {
-    expect(namedImportQuery).toEqual(
+    // await prismaClient.user.findMany()
+    expect(prismaExpressions[1]).toEqual(
       expect.objectContaining({
-        node: callExpressions[1],
         method: 'findMany',
         args: [],
-        prismaContext: expect.objectContaining({ model: 'User', clientType: 'prisma' }),
+        node: callExpressions[1],
+        prismaContext,
+        expressionContext,
       }),
     );
   });

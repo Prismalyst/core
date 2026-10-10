@@ -20,22 +20,60 @@ describe('Shadowing', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find both real client calls and both shadowed client calls', () => {
+  const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
+
+  it('should find 4 call expressions in the fixture', () => {
     expect(callExpressions).toHaveLength(4);
   });
 
-  const [outerCallBefore, parameterCall, localVariableCall, outerCallAfter] = callExpressions;
-
-  const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
-
-  it('should include only the two calls through the outer Prisma client', () => {
+  it('should recognize 2 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(2);
   });
 
-  it('should recognize the outer Prisma client before the shadowing declarations', () => {
-    expect(isPrismaExpression(outerCallBefore!, program, astUtils)).toBe(true);
-    expect(prismaExpressions[0]?.node).toBe(outerCallBefore);
+  const expressionContext = {
+    isExpressionInsideLoop: false,
+    isExpressionInsideFunction: false,
+    isExpressionInsideClassMethod: false,
+    isExpressionInsideAwaitExpression: true,
+    parentFunctionName: null,
+    parentMethodName: null,
+  };
+
+  const prismaContext = {
+    isFloatingPrismaPromise: false,
+    isExpressionInsideTransaction: false,
+    transactionType: null,
+    clientType: 'prisma',
+    model: 'User',
+  };
+
+  it('should detect the expected parameters for the outer client before shadowing', () => {
+    // await prisma.user.findMany()
+    expect(prismaExpressions[0]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [],
+        node: callExpressions[0],
+        prismaContext,
+        expressionContext,
+      }),
+    );
   });
+
+  it('should detect the expected parameters for the outer client after shadowing', () => {
+    // await prisma.user.findMany()
+    expect(prismaExpressions[1]).toEqual(
+      expect.objectContaining({
+        method: 'findMany',
+        args: [],
+        node: callExpressions[3],
+        prismaContext,
+        expressionContext,
+      }),
+    );
+  });
+
+  const [, parameterCall, localVariableCall] = callExpressions;
 
   it('should reject a FakeClient parameter that shadows the outer Prisma client', () => {
     expect(isPrismaExpression(parameterCall!, program, astUtils)).toBe(false);
@@ -43,10 +81,5 @@ describe('Shadowing', () => {
 
   it('should reject a local FakeClient variable that shadows the outer Prisma client', () => {
     expect(isPrismaExpression(localVariableCall!, program, astUtils)).toBe(false);
-  });
-
-  it('should recognize the outer Prisma client after the shadowing declarations', () => {
-    expect(isPrismaExpression(outerCallAfter!, program, astUtils)).toBe(true);
-    expect(prismaExpressions[1]?.node).toBe(outerCallAfter);
   });
 });

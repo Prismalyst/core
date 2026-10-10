@@ -11,84 +11,105 @@ const FIXTURE_PATH = 'src/tests/ast/v7/fixtures/aliases.ts';
 describe('Aliases', () => {
   const { program, sourceFile } = createTestProgram(FIXTURE_PATH);
 
-  const { findVariableStatements, findCallExpressions } = createAstParser(TS);
+  const { findCallExpressions, findVariableStatements } = createAstParser(TS);
 
   const checker = program.getTypeChecker();
 
   const astUtils = createAstUtils(TS, checker);
 
-  const variableStatements = findVariableStatements(sourceFile);
   const callExpressions = findCallExpressions(sourceFile);
+
+  const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
+
+  const variableStatements = findVariableStatements(sourceFile);
 
   it('should find the client declaration and all four alias declarations', () => {
     expect(variableStatements).toHaveLength(5);
   });
 
-  it('should find all five calls through the client and its aliases', () => {
-    expect(callExpressions).toHaveLength(5);
-  });
-
-  const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
-
-  it('should recognize Prisma calls through direct and chained client aliases', () => {
+  it('should recognize 5 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(5);
   });
 
-  it('should detect methods and parse arguments for calls through client aliases', () => {
+  const expressionContext = {
+    isExpressionInsideLoop: false,
+    isExpressionInsideFunction: false,
+    isExpressionInsideClassMethod: false,
+    isExpressionInsideAwaitExpression: true,
+    parentFunctionName: null,
+    parentMethodName: null,
+  };
+
+  const prismaContext = {
+    isFloatingPrismaPromise: false,
+    isExpressionInsideTransaction: false,
+    transactionType: null,
+    clientType: 'prisma',
+    model: 'User',
+  };
+
+  it('should detect the expected parameters for the direct client', () => {
+    // await prisma.user.findMany()
     expect(prismaExpressions[0]).toEqual(
-      expect.objectContaining({
-        method: 'findMany',
-        args: [],
-      }),
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
     );
+  });
 
+  it('should detect the expected parameters for the client alias', () => {
+    // await db.user.findFirst()
     expect(prismaExpressions[1]).toEqual(
-      expect.objectContaining({
-        method: 'findFirst',
-        args: [],
-      }),
+      expect.objectContaining({ method: 'findFirst', args: [], prismaContext, expressionContext }),
     );
+  });
 
+  it('should detect the expected parameters for the first client alias', () => {
+    // await db1.user.update({
+    //   where: {
+    //     id: 1,
+    //   },
+    //   data: {
+    //     name: 'username',
+    //   },
+    // })
     expect(prismaExpressions[2]).toEqual(
       expect.objectContaining({
         method: 'update',
-        args: [
-          {
-            where: {
-              id: 1,
-            },
-            data: {
-              name: 'username',
-            },
-          },
-        ],
+        args: [{ where: { id: 1 }, data: { name: 'username' } }],
+        prismaContext,
+        expressionContext,
       }),
     );
+  });
 
+  it('should detect the expected parameters for the chained client alias', () => {
+    // await db2.user.delete({
+    //   where: {
+    //     id: 1,
+    //   },
+    // })
     expect(prismaExpressions[3]).toEqual(
       expect.objectContaining({
         method: 'delete',
-        args: [
-          {
-            where: {
-              id: 1,
-            },
-          },
-        ],
+        args: [{ where: { id: 1 } }],
+        prismaContext,
+        expressionContext,
       }),
     );
+  });
 
+  it('should detect the expected parameters for the second chained client alias', () => {
+    // await db3.user.create({
+    //   data: {
+    //     name: 'user2',
+    //     email: 'user@mail.com',
+    //   },
+    // })
     expect(prismaExpressions[4]).toEqual(
       expect.objectContaining({
         method: 'create',
-        args: [
-          {
-            data: {
-              name: 'user2',
-              email: 'user@mail.com',
-            },
-          },
-        ],
+        args: [{ data: { name: 'user2', email: 'user@mail.com' } }],
+        prismaContext,
+        expressionContext,
       }),
     );
   });

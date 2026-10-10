@@ -19,129 +19,176 @@ describe('Argument Parsing', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find all eleven query calls in the argument parsing fixture', () => {
-    expect(callExpressions).toHaveLength(11);
-  });
-
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should recognize model queries and the unsafe raw SQL query as Prisma calls', () => {
+  it('should recognize 11 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(11);
   });
 
-  it('should parse literals, nested filters, variables, spreads, and SQL template arguments', () => {
+  const expressionContext = {
+    isExpressionInsideLoop: false,
+    isExpressionInsideFunction: false,
+    isExpressionInsideClassMethod: false,
+    isExpressionInsideAwaitExpression: true,
+    parentFunctionName: null,
+    parentMethodName: null,
+  };
+
+  const prismaContext = {
+    isFloatingPrismaPromise: false,
+    isExpressionInsideTransaction: false,
+    transactionType: null,
+    clientType: 'prisma',
+    model: 'User',
+  };
+
+  it('should detect the expected parameters for a query without arguments', () => {
+    // await prisma.user.findMany()
     expect(prismaExpressions[0]).toEqual(
-      expect.objectContaining({
-        method: 'findMany',
-        args: [],
-      }),
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
     );
+  });
 
+  it('should detect the expected parameters for the empty options', () => {
+    // await prisma.user.findMany({})
     expect(prismaExpressions[1]).toEqual(
-      expect.objectContaining({
-        method: 'findMany',
-        args: [{}],
-      }),
+      expect.objectContaining({ method: 'findMany', args: [{}], prismaContext, expressionContext }),
     );
+  });
 
+  it('should detect the expected parameters for the literal filters and pagination', () => {
+    // await prisma.user.findMany({
+    //   where: { active: true },
+    //   take: 10,
+    //   skip: 20,
+    // })
     expect(prismaExpressions[2]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [
-          {
-            where: { active: true },
-            take: 10,
-            skip: 20,
-          },
-        ],
+        args: [{ where: { active: true }, take: 10, skip: 20 }],
+        prismaContext,
+        expressionContext,
       }),
     );
+  });
 
+  it('should detect the expected parameters for the numeric ID filter', () => {
+    // await prisma.user.delete({
+    //   where: {
+    //     id: 1,
+    //   },
+    // })
     expect(prismaExpressions[3]).toEqual(
       expect.objectContaining({
         method: 'delete',
         args: [{ where: { id: 1 } }],
+        prismaContext,
+        expressionContext,
       }),
     );
+  });
 
+  it('should detect the expected parameters for the update data', () => {
+    // await prisma.user.update({
+    //   where: {
+    //     id: 1,
+    //   },
+    //   data: {
+    //     name: 'username',
+    //   },
+    // })
     expect(prismaExpressions[4]).toEqual(
       expect.objectContaining({
         method: 'update',
-        args: [
-          {
-            where: { id: 1 },
-            data: { name: 'username' },
-          },
-        ],
+        args: [{ where: { id: 1 }, data: { name: 'username' } }],
+        prismaContext,
+        expressionContext,
       }),
     );
+  });
 
+  it('should detect the expected parameters for the nested OR filters', () => {
+    // await prisma.user.findMany({
+    //   where: {
+    //     OR: [{ name: 'User' }, { email: { contains: '@gmail.com' } }],
+    //   },
+    // })
     expect(prismaExpressions[5]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [
-          {
-            where: {
-              OR: [{ name: 'User' }, { email: { contains: '@gmail.com' } }],
-            },
-          },
-        ],
+        args: [{ where: { OR: [{ name: 'User' }, { email: { contains: '@gmail.com' } }] } }],
+        prismaContext,
+        expressionContext,
       }),
     );
+  });
 
-    // Everything below is argument parsing based on VS Code hover information
+  it('should detect the expected parameters for the property access filter', () => {
+    // await prisma.user.findMany({
+    //   where: { active: whereCondition.active },
+    //   take: 10,
+    //   skip: 20,
+    // })
     expect(prismaExpressions[6]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [
-          {
-            where: { active: { kind: 'type', type: 'boolean' } },
-            take: 10,
-            skip: 20,
-          },
-        ],
+        args: [{ where: { active: { kind: 'type', type: 'boolean' } }, take: 10, skip: 20 }],
+        prismaContext,
+        expressionContext,
       }),
     );
+  });
 
+  it('should detect the expected parameters for the shorthand filter', () => {
+    // await prisma.user.findMany({
+    //   where: { active },
+    //   take: 10,
+    //   skip: 20,
+    // })
     expect(prismaExpressions[7]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [
-          {
-            where: { active: true },
-            take: 10,
-            skip: 20,
-          },
-        ],
+        args: [{ where: { active: true }, take: 10, skip: 20 }],
+        prismaContext,
+        expressionContext,
       }),
     );
+  });
 
+  it('should detect the expected parameters for the variable filter', () => {
+    // await prisma.user.findMany({
+    //   where: whereCondition,
+    //   take: 10,
+    //   skip: 20,
+    // })
     expect(prismaExpressions[8]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [
-          {
-            where: { active: { kind: 'type', type: 'boolean' } },
-            take: 10,
-            skip: 20,
-          },
-        ],
+        args: [{ where: { active: { kind: 'type', type: 'boolean' } }, take: 10, skip: 20 }],
+        prismaContext,
+        expressionContext,
       }),
     );
+  });
 
+  it('should detect the expected parameters for the spread filter', () => {
+    // await prisma.user.findMany({
+    //   where: { ...whereCondition },
+    //   take: 10,
+    //   skip: 20,
+    // })
     expect(prismaExpressions[9]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [
-          {
-            where: { active: { kind: 'type', type: 'boolean' } },
-            take: 10,
-            skip: 20,
-          },
-        ],
+        args: [{ where: { active: { kind: 'type', type: 'boolean' } }, take: 10, skip: 20 }],
+        prismaContext,
+        expressionContext,
       }),
     );
+  });
 
+  it('should detect the expected parameters for the SQL template', () => {
+    // await prisma.$queryRawUnsafe(`SELECT * FROM ${active}`)
     expect(prismaExpressions[10]).toEqual(
       expect.objectContaining({
         method: '$queryRawUnsafe',
@@ -152,6 +199,8 @@ describe('Argument Parsing', () => {
             templateSpans: [{ name: 'active', value: true }],
           },
         ],
+        prismaContext: { ...prismaContext, model: null },
+        expressionContext,
       }),
     );
   });

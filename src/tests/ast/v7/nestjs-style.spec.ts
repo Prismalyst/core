@@ -20,56 +20,134 @@ describe('NestJS Style', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find the constructor super call and all six service query calls', () => {
+  const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
+
+  it('should find 7 call expressions in the fixture', () => {
     expect(callExpressions).toHaveLength(7);
   });
 
-  const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
-
-  it('should find all prisma expressions through the injected service', () => {
+  it('should recognize 6 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(6);
   });
 
-  it('should exclude the constructor super call', () => {
-    expect(isPrismaExpression(callExpressions[0]!, program, astUtils)).toBe(false);
-  });
+  const expressionContext = {
+    isExpressionInsideLoop: false,
+    isExpressionInsideFunction: false,
+    isExpressionInsideClassMethod: false,
+    isExpressionInsideAwaitExpression: true,
+    parentFunctionName: null,
+    parentMethodName: null,
+  };
 
-  it('should detect the method and arguments for each prisma call', () => {
+  const prismaContext = {
+    isFloatingPrismaPromise: false,
+    isExpressionInsideTransaction: false,
+    transactionType: null,
+    clientType: 'prisma',
+    model: 'User',
+  };
+
+  it('should detect the expected parameters for the user query in _byId', () => {
+    // await this.prisma.user.findUnique({
+    //       where: {
+    //         id: userId,
+    //       },
+    //     })
     expect(prismaExpressions[0]).toEqual(
       expect.objectContaining({
         method: 'findUnique',
         args: [{ where: { id: { kind: 'type', type: 'number' } } }],
+        prismaContext,
+        expressionContext: {
+          ...expressionContext,
+          isExpressionInsideClassMethod: true,
+          parentMethodName: '_byId',
+        },
       }),
     );
+  });
 
+  it('should detect the expected parameters for the user query in _byEmail', () => {
+    // await this.prisma.user.findUnique({
+    //       where: {
+    //         email,
+    //       },
+    //     })
     expect(prismaExpressions[1]).toEqual(
       expect.objectContaining({
         method: 'findUnique',
         args: [{ where: { email: { kind: 'type', type: 'string' } } }],
+        prismaContext,
+        expressionContext: {
+          ...expressionContext,
+          isExpressionInsideClassMethod: true,
+          parentMethodName: '_byEmail',
+        },
       }),
     );
+  });
 
+  it('should detect the expected parameters for the user query in create', () => {
+    // await this.prisma.user.create({
+    //       data,
+    //     })
     expect(prismaExpressions[2]).toEqual(
       expect.objectContaining({
         method: 'create',
         args: [{ data: { kind: 'type', type: 'unknown' } }],
+        prismaContext,
+        expressionContext: {
+          ...expressionContext,
+          isExpressionInsideClassMethod: true,
+          parentMethodName: 'create',
+        },
       }),
     );
+  });
 
+  it('should detect the expected parameters for the user query in findAll', () => {
+    // await this.prisma.user.findMany()
     expect(prismaExpressions[3]).toEqual(
       expect.objectContaining({
         method: 'findMany',
         args: [],
+        prismaContext,
+        expressionContext: {
+          ...expressionContext,
+          isExpressionInsideClassMethod: true,
+          parentMethodName: 'findAll',
+        },
       }),
     );
+  });
 
+  it('should detect the expected parameters for the user query in delete', () => {
+    // await this.prisma.user.delete({
+    //       where: {
+    //         id: userId,
+    //       },
+    //     })
     expect(prismaExpressions[4]).toEqual(
       expect.objectContaining({
         method: 'delete',
         args: [{ where: { id: { kind: 'type', type: 'number' } } }],
+        prismaContext,
+        expressionContext: {
+          ...expressionContext,
+          isExpressionInsideClassMethod: true,
+          parentMethodName: 'delete',
+        },
       }),
     );
+  });
 
+  it('should detect the expected parameters for the user query in update', () => {
+    // await this.prisma.user.update({
+    //       where: {
+    //         id: userId,
+    //       },
+    //       data,
+    //     })
     expect(prismaExpressions[5]).toEqual(
       expect.objectContaining({
         method: 'update',
@@ -79,30 +157,17 @@ describe('NestJS Style', () => {
             data: { kind: 'type', type: 'unknown' },
           },
         ],
+        prismaContext,
+        expressionContext: {
+          ...expressionContext,
+          isExpressionInsideClassMethod: true,
+          parentMethodName: 'update',
+        },
       }),
     );
   });
 
-  it('should detect the prisma and class method context for each call', () => {
-    const parentMethodNames = ['_byId', '_byEmail', 'create', 'findAll', 'delete', 'update'];
-
-    for (const [index, prismaExpression] of prismaExpressions.entries()) {
-      expect(prismaExpression.prismaContext).toEqual({
-        isFloatingPrismaPromise: false,
-        isExpressionInsideTransaction: false,
-        transactionType: null,
-        clientType: 'prisma',
-        model: 'User',
-      });
-
-      expect(prismaExpression.expressionContext).toEqual({
-        isExpressionInsideLoop: false,
-        isExpressionInsideFunction: false,
-        isExpressionInsideClassMethod: true,
-        isExpressionInsideAwaitExpression: true,
-        parentFunctionName: null,
-        parentMethodName: parentMethodNames[index],
-      });
-    }
+  it('should exclude the constructor super call', () => {
+    expect(isPrismaExpression(callExpressions[0]!, program, astUtils)).toBe(false);
   });
 });

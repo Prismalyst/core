@@ -19,61 +19,57 @@ describe('Inheritance', () => {
 
   const callExpressions = findCallExpressions(sourceFile);
 
-  it('should find all three queries through the inherited Prisma client', () => {
-    expect(callExpressions).toHaveLength(3);
-  });
-
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should find all prisma expressions through multiple levels of inheritance', () => {
+  it('should recognize 3 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(3);
   });
 
-  it('should detect the method, arguments, and model for each inherited prisma call', () => {
-    expect(prismaExpressions[0]).toEqual(
-      expect.objectContaining({
-        method: 'findMany',
-        args: [],
-        prismaContext: expect.objectContaining({ model: 'User' }),
-      }),
-    );
+  const expressionContext = {
+    isExpressionInsideLoop: false,
+    isExpressionInsideFunction: false,
+    isExpressionInsideClassMethod: false,
+    isExpressionInsideAwaitExpression: true,
+    parentFunctionName: null,
+    parentMethodName: null,
+  };
 
+  const prismaContext = {
+    isFloatingPrismaPromise: false,
+    isExpressionInsideTransaction: false,
+    transactionType: null,
+    clientType: 'prisma',
+    model: 'User',
+  };
+
+  it('should detect the expected parameters for the inherited User query', () => {
+    // await prisma.user.findMany()
+    expect(prismaExpressions[0]).toEqual(
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
+    );
+  });
+
+  it('should detect the expected parameters for the inherited Post query', () => {
+    // await prisma.post.findMany()
     expect(prismaExpressions[1]).toEqual(
       expect.objectContaining({
         method: 'findMany',
         args: [],
-        prismaContext: expect.objectContaining({ model: 'Post' }),
-      }),
-    );
-
-    expect(prismaExpressions[2]).toEqual(
-      expect.objectContaining({
-        method: 'create',
-        args: [{ data: { authorId: 1, postId: 1, body: 'x' } }],
-        prismaContext: expect.objectContaining({ model: 'Comment' }),
+        prismaContext: { ...prismaContext, model: 'Post' },
+        expressionContext,
       }),
     );
   });
 
-  it('should detect the inherited prisma client and top-level await context', () => {
-    for (const prismaExpression of prismaExpressions) {
-      expect(prismaExpression.prismaContext).toEqual(
-        expect.objectContaining({
-          isFloatingPrismaPromise: false,
-          isExpressionInsideTransaction: false,
-          transactionType: null,
-          clientType: 'prisma',
-        }),
-      );
-
-      expect(prismaExpression.expressionContext).toEqual({
-        isExpressionInsideLoop: false,
-        isExpressionInsideFunction: false,
-        isExpressionInsideClassMethod: false,
-        isExpressionInsideAwaitExpression: true,
-        parentFunctionName: null,
-        parentMethodName: null,
-      });
-    }
+  it('should detect the expected parameters for the inherited Comment creation', () => {
+    // await prisma.comment.create({ data: { authorId: 1, postId: 1, body: 'x' } })
+    expect(prismaExpressions[2]).toEqual(
+      expect.objectContaining({
+        method: 'create',
+        args: [{ data: { authorId: 1, postId: 1, body: 'x' } }],
+        prismaContext: { ...prismaContext, model: 'Comment' },
+        expressionContext,
+      }),
+    );
   });
 });

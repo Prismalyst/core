@@ -21,127 +21,108 @@ describe('Expression Context', () => {
 
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should recognize all nine Prisma expressions', () => {
+  it('should find 13 call expressions in the fixture', () => {
+    expect(callExpressions).toHaveLength(13);
+  });
+
+  it('should recognize 9 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(9);
   });
 
-  it('should detect the expected method, arguments, and context for every expression', () => {
-    const topLevelContext = {
-      isExpressionInsideLoop: false,
-      isExpressionInsideFunction: false,
-      isExpressionInsideClassMethod: false,
-      isExpressionInsideAwaitExpression: false,
-      parentFunctionName: null,
-      parentMethodName: null,
-    };
+  const expressionContext = {
+    isExpressionInsideLoop: false,
+    isExpressionInsideFunction: false,
+    isExpressionInsideClassMethod: false,
+    isExpressionInsideAwaitExpression: false,
+    parentFunctionName: null,
+    parentMethodName: null,
+  };
 
-    const prismaContext = {
-      isFloatingPrismaPromise: true,
-      isExpressionInsideTransaction: false,
-      transactionType: null,
-      clientType: 'prisma',
-      model: 'User',
-    };
+  const prismaContext = {
+    isFloatingPrismaPromise: true,
+    isExpressionInsideTransaction: false,
+    transactionType: null,
+    clientType: 'prisma',
+    model: 'User',
+  };
 
-    // Standalone query.
+  it('should detect the expected parameters for the standalone query', () => {
+    // prisma.user.findMany()
     expect(prismaExpressions[0]).toEqual(
-      expect.objectContaining({
-        method: 'findMany',
-        args: [],
-        expressionContext: topLevelContext,
-        prismaContext,
-      }),
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
     );
+  });
 
-    // Query assigned to a variable.
+  it('should detect the expected parameters for the variable assignment', () => {
+    // prisma.user.findMany()
     expect(prismaExpressions[1]).toEqual(
-      expect.objectContaining({
-        method: 'findMany',
-        args: [],
-        expressionContext: topLevelContext,
-        prismaContext,
-      }),
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
     );
+  });
 
-    // Query passed to consume().
+  it('should detect the expected parameters for the consume argument', () => {
+    // prisma.user.findMany()
     expect(prismaExpressions[2]).toEqual(
-      expect.objectContaining({
-        method: 'findMany',
-        args: [],
-        expressionContext: topLevelContext,
-        prismaContext,
-      }),
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
     );
+  });
 
-    // Query inside the Promise executor.
+  it('should detect the expected parameters for the Promise executor', () => {
+    // prisma.user.findMany()
     expect(prismaExpressions[3]).toEqual(
       expect.objectContaining({
         method: 'findMany',
         args: [],
-        expressionContext: {
-          ...topLevelContext,
-          isExpressionInsideFunction: true,
-        },
         prismaContext,
+        expressionContext: { ...expressionContext, isExpressionInsideFunction: true },
       }),
     );
+  });
 
-    // User query in the Promise.all array.
+  it('should detect the expected parameters for the User query in Promise.all', () => {
+    // prisma.user.findMany()
     expect(prismaExpressions[4]).toEqual(
-      expect.objectContaining({
-        method: 'findMany',
-        args: [],
-        expressionContext: topLevelContext,
-        prismaContext,
-      }),
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
     );
+  });
 
-    // Post query in the Promise.all array.
+  it('should detect the expected parameters for the Post query in Promise.all', () => {
+    // prisma.post.findMany()
     expect(prismaExpressions[5]).toEqual(
       expect.objectContaining({
         method: 'findMany',
         args: [],
-        expressionContext: topLevelContext,
-        prismaContext: {
-          ...prismaContext,
-          model: 'Post',
-        },
+        prismaContext: { ...prismaContext, model: 'Post' },
+        expressionContext,
       }),
     );
+  });
 
-    // True branch of the ternary expression.
+  it('should detect the expected parameters for the true ternary branch', () => {
+    // prisma.user.findMany()
     expect(prismaExpressions[6]).toEqual(
-      expect.objectContaining({
-        method: 'findMany',
-        args: [],
-        expressionContext: topLevelContext,
-        prismaContext,
-      }),
+      expect.objectContaining({ method: 'findMany', args: [], prismaContext, expressionContext }),
     );
+  });
 
-    // False branch of the ternary expression.
+  it('should detect the expected parameters for the false ternary branch', () => {
+    // prisma.user.findFirst()
     expect(prismaExpressions[7]).toEqual(
-      expect.objectContaining({
-        method: 'findFirst',
-        args: [],
-        expressionContext: topLevelContext,
-        prismaContext,
-      }),
+      expect.objectContaining({ method: 'findFirst', args: [], prismaContext, expressionContext }),
     );
+  });
 
-    // Query returned by doSomething().
+  it('should detect the expected parameters for the returned query', () => {
+    // prisma.user.findMany()
     expect(prismaExpressions[8]).toEqual(
       expect.objectContaining({
         method: 'findMany',
         args: [],
+        prismaContext: { ...prismaContext, isFloatingPrismaPromise: false },
         expressionContext: {
-          ...topLevelContext,
+          ...expressionContext,
           isExpressionInsideFunction: true,
           parentFunctionName: 'doSomething',
-        },
-        prismaContext: {
-          ...prismaContext,
-          isFloatingPrismaPromise: false,
         },
       }),
     );

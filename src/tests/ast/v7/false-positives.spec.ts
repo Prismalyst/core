@@ -21,7 +21,11 @@ describe('False Positives', () => {
 
   const prismaExpressions = getPrismaExpressions(callExpressions, { program, astUtils });
 
-  it('should exclude all lookalike calls from Prisma expressions', () => {
+  it('should find 2 call expressions in the fixture', () => {
+    expect(callExpressions).toHaveLength(2);
+  });
+
+  it('should recognize 0 Prisma call expressions', () => {
     expect(prismaExpressions).toHaveLength(0);
   });
 });
