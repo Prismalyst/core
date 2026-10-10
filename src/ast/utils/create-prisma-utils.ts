@@ -58,9 +58,12 @@ export function createPrismaUtils(ts: typeof TS) {
       ts.isPropertyAccessExpression(node.expression) ||
       ts.isElementAccessExpression(node.expression)
     ) {
-      let receiver = node.expression.expression;
+      let receiver: TS.Expression = node.expression.expression;
+      const visited = new Set<TS.Expression>();
 
-      while (true) {
+      while (!visited.has(receiver)) {
+        visited.add(receiver);
+
         const type = checker.getTypeAtLocation(receiver);
         const connect = checker.getPropertyOfType(type, '$connect');
         const queryRaw = checker.getPropertyOfType(type, '$queryRaw');
@@ -70,6 +73,19 @@ export function createPrismaUtils(ts: typeof TS) {
         // Transaction clients retain query methods but omit $connect.
         if (!connect && isGeneratedPrismaFile(queryRaw?.getDeclarations() ?? [])) {
           return 'transaction';
+        }
+
+        if (ts.isIdentifier(receiver)) {
+          const declaration = checker.getSymbolAtLocation(receiver)?.valueDeclaration;
+
+          if (declaration && ts.isBindingElement(declaration)) {
+            const bindingDeclaration = declaration.parent.parent;
+
+            if (ts.isVariableDeclaration(bindingDeclaration) && bindingDeclaration.initializer) {
+              receiver = bindingDeclaration.initializer;
+              continue;
+            }
+          }
         }
 
         if (!ts.isPropertyAccessExpression(receiver) && !ts.isElementAccessExpression(receiver))
