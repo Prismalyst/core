@@ -36,6 +36,6 @@
     "prisma": "7.10.0",
     "rollup": "^4.63.1",
     "typescript": "6.0.3",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.4"
   }
 }
