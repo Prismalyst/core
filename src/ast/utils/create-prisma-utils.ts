@@ -1,6 +1,11 @@
+import path from 'node:path';
 import type * as TS from 'typescript';
 
-import type { ClientType, TransactionType } from '../../types/prisma.types.js';
+import type {
+  ClientType,
+  PrismaNodeExpression,
+  TransactionType,
+} from '../../types/prisma.types.js';
 
 export function createPrismaUtils(ts: typeof TS) {
   function getTransactionType(node: TS.Node): TransactionType | null {
@@ -47,30 +52,53 @@ export function createPrismaUtils(ts: typeof TS) {
   }
 
   function resolveClientType(node: TS.Node, checker: TS.TypeChecker): ClientType {
-    if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression)) {
-      return 'unknown';
-    }
+    if (!ts.isCallExpression(node)) return 'unknown';
 
-    let receiver = node.expression.expression;
+    if (
+      ts.isPropertyAccessExpression(node.expression) ||
+      ts.isElementAccessExpression(node.expression)
+    ) {
+      let receiver: TS.Expression = node.expression.expression;
+      const visited = new Set<TS.Expression>();
 
-    while (true) {
-      const type = checker.getTypeAtLocation(receiver);
-      const connect = checker.getPropertyOfType(type, '$connect');
-      const queryRaw = checker.getPropertyOfType(type, '$queryRaw');
+      while (!visited.has(receiver)) {
+        visited.add(receiver);
 
-      if (isGeneratedPrismaFile(connect?.getDeclarations() ?? [])) return 'prisma';
+        const type = checker.getTypeAtLocation(receiver);
+        const connect = checker.getPropertyOfType(type, '$connect');
+        const queryRaw = checker.getPropertyOfType(type, '$queryRaw');
 
-      // Transaction clients retain query methods but omit $connect.
-      if (!connect && isGeneratedPrismaFile(queryRaw?.getDeclarations() ?? [])) {
-        return 'transaction';
+        if (isGeneratedPrismaFile(connect?.getDeclarations() ?? [])) return 'prisma';
+
+        // Transaction clients retain query methods but omit $connect.
+        if (!connect && isGeneratedPrismaFile(queryRaw?.getDeclarations() ?? [])) {
+          return 'transaction';
+        }
+
+        if (ts.isIdentifier(receiver)) {
+          const declaration = checker.getSymbolAtLocation(receiver)?.valueDeclaration;
+
+          if (declaration && ts.isBindingElement(declaration)) {
+            const bindingDeclaration = declaration.parent.parent;
+
+            if (ts.isVariableDeclaration(bindingDeclaration) && bindingDeclaration.initializer) {
+              receiver = bindingDeclaration.initializer;
+              continue;
+            }
+          }
+        }
+
+        if (!ts.isPropertyAccessExpression(receiver) && !ts.isElementAccessExpression(receiver))
+          return 'unknown';
+
+        receiver = receiver.expression;
       }
-
-      if (!ts.isPropertyAccessExpression(receiver)) return 'unknown';
-
-      receiver = receiver.expression;
     }
+
+    return 'unknown';
   }
 
+  // TODO: Make it configurable + rewrite with node:path
   function isGeneratedPrismaFile(declarations: TS.Declaration[]) {
     return declarations.some((declaration) => {
       const fileName = declaration.getSourceFile().fileName;
@@ -99,12 +127,56 @@ export function createPrismaUtils(ts: typeof TS) {
     return findContainingTransactionType(node) !== null;
   }
 
+  function resolveModelName(node: PrismaNodeExpression, checker: TS.TypeChecker): string | null {
+    const expression = node.expression;
+
+    if (!ts.isPropertyAccessExpression(expression) && !ts.isElementAccessExpression(expression)) {
+      return null;
+    }
+
+    let propertyName: string;
+
+    if (ts.isPropertyAccessExpression(expression)) {
+      propertyName = expression.name.text;
+    } else {
+      const argument = expression.argumentExpression;
+
+      if (!ts.isStringLiteralLike(argument)) {
+        return null;
+      }
+
+      propertyName = argument.text;
+    }
+
+    const objectType = checker.getTypeAtLocation(expression.expression);
+    const symbol = checker.getPropertyOfType(objectType, propertyName);
+
+    if (!symbol) return null;
+
+    const declarations = symbol.getDeclarations() ?? [];
+
+    for (const declaration of declarations) {
+      const fileName = declaration.getSourceFile().fileName;
+      const modelsDirectory = path.join('prisma', 'models');
+      const sourceDirectory = path.dirname(fileName);
+
+      if (!sourceDirectory.includes(modelsDirectory)) continue;
+
+      const model = path.parse(fileName).name;
+
+      return model;
+    }
+
+    return null;
+  }
+
   return {
     resolveTransactionType,
     resolveClientType,
     isGeneratedPrismaFile,
     isFloatingPrismaPromise,
     isInsidePrismaTransaction,
+    resolveModelName,
   };
 }
 

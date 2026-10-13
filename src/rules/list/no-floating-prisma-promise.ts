@@ -1,7 +1,10 @@
 import { PrismaExpression } from '../../types/prisma.types.js';
-import { Rule } from '../../types/rule.eslint.types.js';
+import { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
-export function noFloatingPrismaPromise(expression: PrismaExpression, rule: Rule) {
+export function noFloatingPrismaPromise(
+  expression: Pick<PrismaExpression, 'method' | 'prismaContext' | 'expressionContext'>,
+  rule: RuleWithoutFunction,
+) {
   const isRuleMethod = rule.methods.includes(expression.method);
 
   if (!isRuleMethod) return false;

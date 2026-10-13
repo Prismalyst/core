@@ -1,12 +1,12 @@
-import { NormalizedAstNode } from '../../types/ast.types.js';
+import { TemplateAstNode } from '../../types/ast.types.js';
 
-export function isTemplateNode(value: unknown): value is NormalizedAstNode {
+export function isTemplateNode(node: unknown): node is TemplateAstNode {
   return (
-    typeof value === 'object' &&
-    value !== null &&
-    'kind' in value &&
-    value.kind === 'template' &&
-    'raw' in value &&
-    typeof value.raw === 'string'
+    typeof node === 'object' &&
+    node !== null &&
+    'kind' in node &&
+    node.kind === 'template' &&
+    'raw' in node &&
+    typeof node.raw === 'string'
   );
 }

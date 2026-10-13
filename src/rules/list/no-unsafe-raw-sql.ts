@@ -1,6 +1,9 @@
 import { PrismaExpression } from '../../types/prisma.types.js';
-import { Rule } from '../../types/rule.eslint.types.js';
+import { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
-export function noUnsafeRawSQL(expression: PrismaExpression, rule: Rule) {
+export function noUnsafeRawSQL(
+  expression: Pick<PrismaExpression, 'method'>,
+  rule: RuleWithoutFunction,
+) {
   return rule.methods.includes(expression.method);
 }
