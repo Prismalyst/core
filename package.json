@@ -15,7 +15,7 @@
     "README.md"
   ],
   "scripts": {
-    "test": "vitest run",
+    "test:ci": "vitest run",
     "test:watch": "vitest",
     "build": "tsc && npx rollup dist/index.js --file dist/index.cjs --format cjs",
     "watch": "tsc -w",
