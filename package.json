@@ -21,8 +21,8 @@
     "watch": "tsc -w",
     "pack": "npm pack",
     "pack:check": "npm pack --dry-run",
-    "lint": "eslint \"{**/*,*}.{ts}\"",
-    "lint:fix": "eslint \"{**/*,*}.{ts}\" --fix",
+    "lint": "eslint \"**/*.ts\"",
+    "lint:fix": "eslint \"**/*.ts\" --fix",
     "typecheck": "npx tsc --noEmit",
     "prisma:v7:generate": "npx prisma generate --schema ./src/tests/schemas/v7"
   },
@@ -30,13 +30,17 @@
     "typescript": ">=5.0.0 <7"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
     "prettier": "^3.9.6",
     "prisma": "7.10.0",
     "rollup": "^4.63.1",
     "typescript": "6.0.3",
+    "typescript-eslint": "^8.71.2",
     "vitest": "^5.0.4"
   }
 }
