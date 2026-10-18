@@ -16,6 +16,7 @@ type RulesWithoutOptions = {
   'require-where-update-many': NoOptions;
   'no-query-in-loop': NoOptions;
   'no-root-client-in-transaction': NoOptions;
+  'no-unindexed-filter': NoOptions;
 };
 
 type RulesWithOptions = {
