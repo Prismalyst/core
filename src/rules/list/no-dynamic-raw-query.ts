@@ -9,5 +9,5 @@ export function noDynamicRawQuery(
 ): boolean {
   if (!rule.methods.includes(expression.method)) return false;
 
-  return isTemplateNode(expression.args[0]);
+  return isTemplateNode(expression.args[0]?.value);
 }

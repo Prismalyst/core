@@ -4,6 +4,8 @@ import { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 import { isObjectEmpty } from '../utils/is-object-empty.js';
 import { isObject } from '../utils/is-object.js';
 
+import { getProperty } from '../../ast/utils/get-property.js';
+
 export function requireWhereDeleteMany(
   expression: Pick<PrismaExpression, 'method' | 'args'>,
   rule: RuleWithoutFunction,
@@ -12,7 +14,7 @@ export function requireWhereDeleteMany(
 
   if (!isRuleMethod) return false;
 
-  const firstArg = expression.args[0];
+  const firstArg = expression.args[0]?.value;
 
   // Disallow prisma.user.deleteMany()
   if (firstArg === undefined) return true;
@@ -21,7 +23,7 @@ export function requireWhereDeleteMany(
 
   if (!isFirstArgIsObject) return true;
 
-  const whereArg = firstArg.where;
+  const whereArg = getProperty(expression.args[0], ['where'])?.value;
 
   // Disallow explicit undefined
   if (whereArg === undefined) return true;

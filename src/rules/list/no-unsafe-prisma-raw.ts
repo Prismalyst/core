@@ -10,7 +10,7 @@ export function noUnsafePrismaRaw(
 
   if (!isRuleMethod) return false;
 
-  const firstArg = expression.args[0];
+  const firstArg = expression.args[0]?.value;
 
   if (firstArg === undefined) return false;
 
