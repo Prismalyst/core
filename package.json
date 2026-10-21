@@ -23,7 +23,7 @@
     "pack:check": "npm pack --dry-run",
     "lint": "eslint \"**/*.ts\"",
     "lint:fix": "eslint \"**/*.ts\" --fix",
-    "typecheck": "npx tsc --noEmit", // TODO: make check types in tests
+    "typecheck": "npx tsc --noEmit",
     "prisma:v7:generate": "npx prisma generate --schema ./src/tests/schemas/v7"
   },
   "peerDependencies": {
