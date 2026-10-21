@@ -21,6 +21,7 @@ import { noUnsafeRawSQL } from './list/no-unsafe-raw-sql.js';
 import { requireWhereDeleteMany } from './list/require-where-delete-many.js';
 import { requireWhereUpdateMany } from './list/require-where-update-many.js';
 
+// TODO: migrate current rules to the new return type
 export const RULES_LIST: RegisteredRule[] = [
   {
     name: 'no-unsafe-raw-sql',
