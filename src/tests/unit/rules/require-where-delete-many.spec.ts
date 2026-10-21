@@ -10,6 +10,7 @@ const rule: RuleWithoutFunction = {
   name: 'require-where-delete-many',
   astType: 'callExpression',
   methods: ['deleteMany'],
+  requireSchema: false,
 };
 
 describe('requireWhereDeleteMany', () => {

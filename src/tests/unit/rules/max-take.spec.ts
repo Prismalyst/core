@@ -10,6 +10,7 @@ const rule: RuleWithoutFunction = {
   name: 'max-take',
   astType: 'callExpression',
   methods: ['findMany'],
+  requireSchema: false,
 };
 
 describe('maxTake', () => {

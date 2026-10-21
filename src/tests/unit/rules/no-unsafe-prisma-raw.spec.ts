@@ -10,6 +10,7 @@ const rule: RuleWithoutFunction = {
   name: 'no-unsafe-prisma-raw',
   astType: 'callExpression',
   methods: ['raw', 'sql', 'join', 'empty'],
+  requireSchema: false,
 };
 
 describe('noUnsafePrismaRaw', () => {

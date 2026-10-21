@@ -8,6 +8,7 @@ const rule: RuleWithoutFunction = {
   name: 'no-query-in-loop',
   astType: 'callExpression',
   methods: ['findMany'],
+  requireSchema: false,
 };
 
 const expressionContext = {

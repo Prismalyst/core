@@ -8,6 +8,7 @@ const rule: RuleWithoutFunction = {
   name: 'no-unsafe-raw-sql',
   astType: 'callExpression',
   methods: ['$queryRawUnsafe', '$executeRawUnsafe'],
+  requireSchema: false,
 };
 
 describe('noUnsafeRawSQL', () => {

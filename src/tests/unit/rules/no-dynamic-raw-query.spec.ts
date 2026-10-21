@@ -10,6 +10,7 @@ const rule: RuleWithoutFunction = {
   name: 'no-dynamic-raw-query',
   astType: 'callExpression',
   methods: ['$queryRawUnsafe', '$executeRawUnsafe'],
+  requireSchema: false,
 };
 
 describe('noDynamicRawQuery', () => {

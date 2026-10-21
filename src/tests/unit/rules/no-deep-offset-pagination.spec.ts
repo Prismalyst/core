@@ -10,6 +10,7 @@ const rule: RuleWithoutFunction = {
   name: 'no-deep-offset-pagination',
   astType: 'callExpression',
   methods: ['findMany'],
+  requireSchema: false,
 };
 
 describe('noDeepOffsetPagination', () => {

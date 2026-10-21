@@ -8,6 +8,7 @@ const rule: RuleWithoutFunction = {
   name: 'no-prisma-client-in-function',
   astType: 'newExpression',
   methods: [],
+  requireSchema: false,
 };
 
 const expressionContext = {

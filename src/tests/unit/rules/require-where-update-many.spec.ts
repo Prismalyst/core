@@ -10,6 +10,7 @@ const rule: RuleWithoutFunction = {
   name: 'require-where-update-many',
   astType: 'callExpression',
   methods: ['updateMany'],
+  requireSchema: false,
 };
 
 describe('requireWhereUpdateMany', () => {
