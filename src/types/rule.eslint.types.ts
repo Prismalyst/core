@@ -1,4 +1,5 @@
 import type { Document } from '@prisma/dmmf';
+import type * as TS from 'typescript';
 
 import { PrismaExpression } from './prisma.types.js';
 
@@ -7,6 +8,11 @@ type RuleAstType = 'callExpression' | 'newExpression';
 export type RuleOptions<T> = Readonly<T>;
 
 export type DMMFType = Document;
+
+export type RuleReturnType = {
+  isTriggered: boolean;
+  nodeToHighlight?: TS.Node;
+};
 
 export type Rule<TOptions = Record<PropertyKey, never>> = {
   name: string;
@@ -20,7 +26,7 @@ export type Rule<TOptions = Record<PropertyKey, never>> = {
     // Make sure it works with @prismalyst/eslint-
     options: RuleOptions<TOptions>,
     dmmf: DMMFType,
-  ) => boolean;
+  ) => RuleReturnType | boolean;
 };
 
 export type RuleWithoutFunction = Omit<Rule, 'function'>;
