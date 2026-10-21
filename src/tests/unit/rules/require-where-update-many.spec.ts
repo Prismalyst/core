@@ -4,6 +4,8 @@ import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
 import { requireWhereUpdateMany } from '../../../rules/list/require-where-update-many.js';
 
+import { wrapArguments } from '../../helpers/wrap-arguments.js';
+
 const rule: RuleWithoutFunction = {
   name: 'require-where-update-many',
   astType: 'callExpression',
@@ -26,16 +28,24 @@ describe('requireWhereUpdateMany', () => {
     { name: 'a null where', args: [{ where: null }], expected: false },
     { name: 'a non-object where', args: [{ where: 42 }], expected: false },
   ])('returns violation=$expected for updateMany with $name', ({ args, expected }) => {
-    expect(requireWhereUpdateMany({ method: 'updateMany', args }, rule)).toBe(expected);
+    expect(requireWhereUpdateMany({ method: 'updateMany', args: wrapArguments(args) }, rule)).toBe(
+      expected,
+    );
   });
 
   it('ignores methods outside the rule even without where', () => {
-    expect(requireWhereUpdateMany({ method: 'findMany', args: [{}] }, rule)).toBe(false);
+    expect(requireWhereUpdateMany({ method: 'findMany', args: wrapArguments([{}]) }, rule)).toBe(
+      false,
+    );
   });
 
   it('reports only methods in the custom rule configuration', () => {
     const customRule = { ...rule, methods: ['customMethod'] };
-    expect(requireWhereUpdateMany({ method: 'customMethod', args: [{}] }, customRule)).toBe(true);
-    expect(requireWhereUpdateMany({ method: 'updateMany', args: [{}] }, customRule)).toBe(false);
+    expect(
+      requireWhereUpdateMany({ method: 'customMethod', args: wrapArguments([{}]) }, customRule),
+    ).toBe(true);
+    expect(
+      requireWhereUpdateMany({ method: 'updateMany', args: wrapArguments([{}]) }, customRule),
+    ).toBe(false);
   });
 });

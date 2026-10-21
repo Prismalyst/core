@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createAstParser } from '../../../ast/parser/create-ast-parser.js';
 import { createAstUtils } from '../../../ast/utils/create-ast-utils.js';
+import { wrapArguments } from '../../helpers/wrap-arguments.js';
 import { createTestProgram } from './helpers/create-test-program.js';
 import { getPrismaExpressions } from './helpers/get-prisma-expressions.js';
 
@@ -52,7 +53,12 @@ describe('Argument Parsing', () => {
   it('should detect the expected parameters for the empty options', () => {
     // await prisma.user.findMany({})
     expect(prismaExpressions[1]).toEqual(
-      expect.objectContaining({ method: 'findMany', args: [{}], prismaContext, expressionContext }),
+      expect.objectContaining({
+        method: 'findMany',
+        args: wrapArguments([{}]),
+        prismaContext,
+        expressionContext,
+      }),
     );
   });
 
@@ -65,7 +71,7 @@ describe('Argument Parsing', () => {
     expect(prismaExpressions[2]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [{ where: { active: true }, take: 10, skip: 20 }],
+        args: wrapArguments([{ where: { active: true }, take: 10, skip: 20 }]),
         prismaContext,
         expressionContext,
       }),
@@ -81,7 +87,7 @@ describe('Argument Parsing', () => {
     expect(prismaExpressions[3]).toEqual(
       expect.objectContaining({
         method: 'delete',
-        args: [{ where: { id: 1 } }],
+        args: wrapArguments([{ where: { id: 1 } }]),
         prismaContext,
         expressionContext,
       }),
@@ -100,7 +106,7 @@ describe('Argument Parsing', () => {
     expect(prismaExpressions[4]).toEqual(
       expect.objectContaining({
         method: 'update',
-        args: [{ where: { id: 1 }, data: { name: 'username' } }],
+        args: wrapArguments([{ where: { id: 1 }, data: { name: 'username' } }]),
         prismaContext,
         expressionContext,
       }),
@@ -116,7 +122,9 @@ describe('Argument Parsing', () => {
     expect(prismaExpressions[5]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [{ where: { OR: [{ name: 'User' }, { email: { contains: '@gmail.com' } }] } }],
+        args: wrapArguments([
+          { where: { OR: [{ name: 'User' }, { email: { contains: '@gmail.com' } }] } },
+        ]),
         prismaContext,
         expressionContext,
       }),
@@ -132,7 +140,9 @@ describe('Argument Parsing', () => {
     expect(prismaExpressions[6]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [{ where: { active: { kind: 'type', type: 'boolean' } }, take: 10, skip: 20 }],
+        args: wrapArguments([
+          { where: { active: { kind: 'type', type: 'boolean' } }, take: 10, skip: 20 },
+        ]),
         prismaContext,
         expressionContext,
       }),
@@ -148,7 +158,7 @@ describe('Argument Parsing', () => {
     expect(prismaExpressions[7]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [{ where: { active: true }, take: 10, skip: 20 }],
+        args: wrapArguments([{ where: { active: true }, take: 10, skip: 20 }]),
         prismaContext,
         expressionContext,
       }),
@@ -164,7 +174,9 @@ describe('Argument Parsing', () => {
     expect(prismaExpressions[8]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [{ where: { active: { kind: 'type', type: 'boolean' } }, take: 10, skip: 20 }],
+        args: wrapArguments([
+          { where: { active: { kind: 'type', type: 'boolean' } }, take: 10, skip: 20 },
+        ]),
         prismaContext,
         expressionContext,
       }),
@@ -180,7 +192,9 @@ describe('Argument Parsing', () => {
     expect(prismaExpressions[9]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [{ where: { active: { kind: 'type', type: 'boolean' } }, take: 10, skip: 20 }],
+        args: wrapArguments([
+          { where: { active: { kind: 'type', type: 'boolean' } }, take: 10, skip: 20 },
+        ]),
         prismaContext,
         expressionContext,
       }),
@@ -192,13 +206,13 @@ describe('Argument Parsing', () => {
     expect(prismaExpressions[10]).toEqual(
       expect.objectContaining({
         method: '$queryRawUnsafe',
-        args: [
+        args: wrapArguments([
           {
             kind: 'template',
             raw: '`SELECT * FROM ${active}`',
             templateSpans: [{ name: 'active', value: true }],
           },
-        ],
+        ]),
         prismaContext: { ...prismaContext, model: null },
         expressionContext,
       }),

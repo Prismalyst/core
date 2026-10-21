@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createAstParser } from '../../../ast/parser/create-ast-parser.js';
 import { createAstUtils } from '../../../ast/utils/create-ast-utils.js';
+import { wrapArguments } from '../../helpers/wrap-arguments.js';
 import { createTestProgram } from './helpers/create-test-program.js';
 import { getPrismaExpressions } from './helpers/get-prisma-expressions.js';
 
@@ -98,7 +99,7 @@ describe('Scope', () => {
     expect(prismaExpressions[4]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [{ where: { active: true } }],
+        args: wrapArguments([{ where: { active: true } }]),
         prismaContext,
         expressionContext,
       }),
@@ -110,7 +111,7 @@ describe('Scope', () => {
     expect(prismaExpressions[5]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [{ where: { active: false } }],
+        args: wrapArguments([{ where: { active: false } }]),
         prismaContext,
         expressionContext,
       }),
@@ -122,7 +123,7 @@ describe('Scope', () => {
     expect(prismaExpressions[6]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [{ where: { active: true } }],
+        args: wrapArguments([{ where: { active: true } }]),
         prismaContext,
         expressionContext: {
           ...expressionContext,
@@ -138,7 +139,7 @@ describe('Scope', () => {
     expect(prismaExpressions[7]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [{ where: { active: false } }],
+        args: wrapArguments([{ where: { active: false } }]),
         prismaContext,
         expressionContext: {
           ...expressionContext,
@@ -166,7 +167,7 @@ describe('Scope', () => {
     expect(prismaExpressions[9]).toEqual(
       expect.objectContaining({
         method: 'findUnique',
-        args: [{ where: { id: { kind: 'type', type: 'number' } } }],
+        args: wrapArguments([{ where: { id: { kind: 'type', type: 'number' } } }]),
         prismaContext,
         expressionContext: { ...expressionContext, isExpressionInsideLoop: true },
       }),
@@ -178,7 +179,7 @@ describe('Scope', () => {
     expect(prismaExpressions[10]).toEqual(
       expect.objectContaining({
         method: 'findMany',
-        args: [{ where: { name: { kind: 'type', type: 'string' } } }],
+        args: wrapArguments([{ where: { name: { kind: 'type', type: 'string' } } }]),
         prismaContext,
         expressionContext: { ...expressionContext, isExpressionInsideLoop: true },
       }),
@@ -214,7 +215,7 @@ describe('Scope', () => {
     expect(prismaExpressions[13]).toEqual(
       expect.objectContaining({
         method: 'findUnique',
-        args: [{ where: { id: { kind: 'type', type: 'number' } } }],
+        args: wrapArguments([{ where: { id: { kind: 'type', type: 'number' } } }]),
         prismaContext,
         expressionContext: {
           ...expressionContext,
@@ -230,7 +231,7 @@ describe('Scope', () => {
     expect(prismaExpressions[14]).toEqual(
       expect.objectContaining({
         method: 'findUnique',
-        args: [{ where: { id: { kind: 'type', type: 'number' } } }],
+        args: wrapArguments([{ where: { id: { kind: 'type', type: 'number' } } }]),
         prismaContext,
         expressionContext: { ...expressionContext, isExpressionInsideFunction: true },
       }),
@@ -286,7 +287,7 @@ describe('Scope', () => {
     expect(prismaExpressions[18]).toEqual(
       expect.objectContaining({
         method: 'findUnique',
-        args: [{ where: { id: { kind: 'type', type: 'number' } } }],
+        args: wrapArguments([{ where: { id: { kind: 'type', type: 'number' } } }]),
         prismaContext,
         expressionContext: {
           ...expressionContext,

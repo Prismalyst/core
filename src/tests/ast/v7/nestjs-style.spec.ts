@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { createAstParser } from '../../../ast/parser/create-ast-parser.js';
 import { isPrismaExpression } from '../../../ast/prisma/is-prisma-expression.js';
 import { createAstUtils } from '../../../ast/utils/create-ast-utils.js';
+import { wrapArguments } from '../../helpers/wrap-arguments.js';
 import { createTestProgram } from './helpers/create-test-program.js';
 import { getPrismaExpressions } from './helpers/get-prisma-expressions.js';
 
@@ -56,7 +57,7 @@ describe('NestJS Style', () => {
     expect(prismaExpressions[0]).toEqual(
       expect.objectContaining({
         method: 'findUnique',
-        args: [{ where: { id: { kind: 'type', type: 'number' } } }],
+        args: wrapArguments([{ where: { id: { kind: 'type', type: 'number' } } }]),
         prismaContext,
         expressionContext: {
           ...expressionContext,
@@ -76,7 +77,7 @@ describe('NestJS Style', () => {
     expect(prismaExpressions[1]).toEqual(
       expect.objectContaining({
         method: 'findUnique',
-        args: [{ where: { email: { kind: 'type', type: 'string' } } }],
+        args: wrapArguments([{ where: { email: { kind: 'type', type: 'string' } } }]),
         prismaContext,
         expressionContext: {
           ...expressionContext,
@@ -94,7 +95,7 @@ describe('NestJS Style', () => {
     expect(prismaExpressions[2]).toEqual(
       expect.objectContaining({
         method: 'create',
-        args: [{ data: { kind: 'type', type: 'unknown' } }],
+        args: wrapArguments([{ data: { kind: 'type', type: 'unknown' } }]),
         prismaContext,
         expressionContext: {
           ...expressionContext,
@@ -130,7 +131,7 @@ describe('NestJS Style', () => {
     expect(prismaExpressions[4]).toEqual(
       expect.objectContaining({
         method: 'delete',
-        args: [{ where: { id: { kind: 'type', type: 'number' } } }],
+        args: wrapArguments([{ where: { id: { kind: 'type', type: 'number' } } }]),
         prismaContext,
         expressionContext: {
           ...expressionContext,
@@ -151,12 +152,12 @@ describe('NestJS Style', () => {
     expect(prismaExpressions[5]).toEqual(
       expect.objectContaining({
         method: 'update',
-        args: [
+        args: wrapArguments([
           {
             where: { id: { kind: 'type', type: 'number' } },
             data: { kind: 'type', type: 'unknown' },
           },
-        ],
+        ]),
         prismaContext,
         expressionContext: {
           ...expressionContext,

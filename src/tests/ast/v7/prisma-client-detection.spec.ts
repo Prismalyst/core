@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createAstParser } from '../../../ast/parser/create-ast-parser.js';
 import { createAstUtils } from '../../../ast/utils/create-ast-utils.js';
+import { wrapArguments } from '../../helpers/wrap-arguments.js';
 import { createTestProgram } from './helpers/create-test-program.js';
 import { getPrismaExpressions } from './helpers/get-prisma-expressions.js';
 
@@ -72,7 +73,7 @@ describe('Prisma Client Detection', () => {
     expect(prismaExpressions[2]).toEqual(
       expect.objectContaining({
         method: 'update',
-        args: [{ where: { id: 1 }, data: { name: 'username' } }],
+        args: wrapArguments([{ where: { id: 1 }, data: { name: 'username' } }]),
         prismaContext,
         expressionContext,
       }),
@@ -88,7 +89,7 @@ describe('Prisma Client Detection', () => {
     expect(prismaExpressions[3]).toEqual(
       expect.objectContaining({
         method: 'delete',
-        args: [{ where: { id: 1 } }],
+        args: wrapArguments([{ where: { id: 1 } }]),
         prismaContext,
         expressionContext,
       }),

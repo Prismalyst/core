@@ -4,6 +4,8 @@ import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
 import { requireWhereDeleteMany } from '../../../rules/list/require-where-delete-many.js';
 
+import { wrapArguments } from '../../helpers/wrap-arguments.js';
+
 const rule: RuleWithoutFunction = {
   name: 'require-where-delete-many',
   astType: 'callExpression',
@@ -26,16 +28,24 @@ describe('requireWhereDeleteMany', () => {
     { name: 'a null where', args: [{ where: null }], expected: false },
     { name: 'a non-object where', args: [{ where: 42 }], expected: false },
   ])('returns violation=$expected for deleteMany with $name', ({ args, expected }) => {
-    expect(requireWhereDeleteMany({ method: 'deleteMany', args }, rule)).toBe(expected);
+    expect(requireWhereDeleteMany({ method: 'deleteMany', args: wrapArguments(args) }, rule)).toBe(
+      expected,
+    );
   });
 
   it('ignores methods outside the rule even without where', () => {
-    expect(requireWhereDeleteMany({ method: 'findMany', args: [{}] }, rule)).toBe(false);
+    expect(requireWhereDeleteMany({ method: 'findMany', args: wrapArguments([{}]) }, rule)).toBe(
+      false,
+    );
   });
 
   it('reports only methods in the custom rule configuration', () => {
     const customRule = { ...rule, methods: ['customMethod'] };
-    expect(requireWhereDeleteMany({ method: 'customMethod', args: [{}] }, customRule)).toBe(true);
-    expect(requireWhereDeleteMany({ method: 'deleteMany', args: [{}] }, customRule)).toBe(false);
+    expect(
+      requireWhereDeleteMany({ method: 'customMethod', args: wrapArguments([{}]) }, customRule),
+    ).toBe(true);
+    expect(
+      requireWhereDeleteMany({ method: 'deleteMany', args: wrapArguments([{}]) }, customRule),
+    ).toBe(false);
   });
 });

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createAstParser } from '../../../ast/parser/create-ast-parser.js';
 import { createAstUtils } from '../../../ast/utils/create-ast-utils.js';
+import { wrapArguments } from '../../helpers/wrap-arguments.js';
 import { createTestProgram } from './helpers/create-test-program.js';
 import { getPrismaExpressions } from './helpers/get-prisma-expressions.js';
 
@@ -68,7 +69,7 @@ describe('Call Expressions', () => {
     expect(prismaExpressions[2]).toEqual(
       expect.objectContaining({
         method: 'update',
-        args: [{ where: { id: 1 }, data: { name: 'username' } }],
+        args: wrapArguments([{ where: { id: 1 }, data: { name: 'username' } }]),
         prismaContext,
         expressionContext,
       }),
@@ -84,7 +85,7 @@ describe('Call Expressions', () => {
     expect(prismaExpressions[3]).toEqual(
       expect.objectContaining({
         method: 'delete',
-        args: [{ where: { id: 1 } }],
+        args: wrapArguments([{ where: { id: 1 } }]),
         prismaContext,
         expressionContext,
       }),
@@ -101,7 +102,7 @@ describe('Call Expressions', () => {
     expect(prismaExpressions[4]).toEqual(
       expect.objectContaining({
         method: 'create',
-        args: [{ data: { name: 'user2', email: 'user@mail.com' } }],
+        args: wrapArguments([{ data: { name: 'user2', email: 'user@mail.com' } }]),
         prismaContext,
         expressionContext,
       }),
@@ -116,7 +117,7 @@ describe('Call Expressions', () => {
     expect(prismaExpressions[5]).toEqual(
       expect.objectContaining({
         method: '$transaction',
-        args: [callExpressions[5]?.arguments[0]],
+        args: wrapArguments([callExpressions[5]?.arguments[0]]),
         prismaContext: { ...prismaContext, transactionType: 'interactive', model: null },
         expressionContext,
       }),
