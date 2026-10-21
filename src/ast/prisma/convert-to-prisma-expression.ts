@@ -70,6 +70,6 @@ export function convertToPrismaExpression(
       model,
     },
     method,
-    args: args.map((_, index) => nodeUtils.parseArgument(node, index)),
+    args: args.map((argument) => nodeUtils.parseValue(argument, checker)),
   };
 }

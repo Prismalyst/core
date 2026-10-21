@@ -1,5 +1,7 @@
 import type * as TS from 'typescript';
 
+import type { ParsedValue } from './ast.types.js';
+
 export type TransactionType = 'interactive' | 'sequential';
 export type ClientType = 'prisma' | 'transaction' | 'unknown';
 
@@ -47,5 +49,5 @@ export type PrismaExpression = {
   expressionContext: ExpressionContext;
   prismaContext: PrismaContext;
   method: string;
-  args: unknown[];
+  args: ParsedValue[];
 };
