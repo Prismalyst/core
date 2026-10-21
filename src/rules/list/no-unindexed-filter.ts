@@ -4,11 +4,7 @@ import { DMMFType, RuleOptions, RuleWithoutFunction } from '../../types/rule.esl
 import { isObjectEmpty } from '../utils/is-object-empty.js';
 import { isObject } from '../utils/is-object.js';
 
-// TODO: Find a way to highlight the node
-// export type RuleReturnType = {
-//   isTriggered: boolean;
-//   nodeToHighlight: TS.Node
-// };
+import { getProperty } from '../../ast/utils/get-property.js';
 
 export function noUnindexedFilter(
   expression: Pick<PrismaExpression, 'method' | 'args' | 'prismaContext'>,
@@ -18,27 +14,27 @@ export function noUnindexedFilter(
 ) {
   const isRuleMethod = rule.methods.includes(expression.method);
 
-  if (!isRuleMethod) return false;
+  if (!isRuleMethod) return { isTriggered: false };
 
-  const firstArg = expression.args[0];
+  const firstArg = expression.args[0]?.value;
 
   const isFirstArgIsObject = isObject(firstArg);
 
   // Prisma already highlights this as an error
-  if (!isFirstArgIsObject) return false;
+  if (!isFirstArgIsObject) return { isTriggered: false };
 
-  const whereArg = firstArg.where;
+  const whereArg = getProperty(expression.args[0], ['where'])?.value;
 
   // That's not our case
-  if (whereArg === undefined) return false;
+  if (whereArg === undefined) return { isTriggered: false };
 
   const isWhereArgIsObject = isObject(whereArg);
 
   // Prisma already highlights this as an error
-  if (!isWhereArgIsObject) return false;
+  if (!isWhereArgIsObject) return { isTriggered: false };
 
   // That's not our case
-  if (isObjectEmpty(whereArg)) return false;
+  if (isObjectEmpty(whereArg)) return { isTriggered: false };
 
   const whereKeys = Object.keys(whereArg);
   const indexes = dmmf.datamodel.indexes;
@@ -64,8 +60,20 @@ export function noUnindexedFilter(
   });
 
   if (indexedKeys.size !== whereKeys.length) {
-    return true;
+    const unindexedKeys = whereKeys.filter((key) => !indexedKeys.has(key));
+
+    if (unindexedKeys.length === 0) return { isTriggered: false };
+    if (typeof unindexedKeys[0] !== 'string') return { isTriggered: false };
+
+    const nodeToHighlight = getProperty(expression.args[0], ['where', unindexedKeys[0]])?.node;
+
+    if (nodeToHighlight === undefined) return { isTriggered: true };
+
+    return {
+      isTriggered: true,
+      nodeToHighlight,
+    };
   }
 
-  return false;
+  return { isTriggered: false };
 }
