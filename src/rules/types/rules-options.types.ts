@@ -17,6 +17,7 @@ type RulesWithoutOptions = {
   'no-query-in-loop': NoOptions;
   'no-root-client-in-transaction': NoOptions;
   'no-unindexed-filter': NoOptions;
+  'unstable-pagination': NoOptions;
 };
 
 type RulesWithOptions = {

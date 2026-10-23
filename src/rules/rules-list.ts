@@ -3,6 +3,7 @@ import { RegisteredRule } from './types/rules-options.types.js';
 import {
   PRISMA_CRUD_METHODS,
   PRISMA_METHODS,
+  PRISMA_READ_METHODS,
   PRISMA_SQL_HELPERS,
   PRISMA_UNSAFE_SQL_METHODS,
 } from '../constants/prisma-methods.constants.js';
@@ -20,6 +21,7 @@ import { noUnsafePrismaRaw } from './list/no-unsafe-prisma-raw.js';
 import { noUnsafeRawSQL } from './list/no-unsafe-raw-sql.js';
 import { requireWhereDeleteMany } from './list/require-where-delete-many.js';
 import { requireWhereUpdateMany } from './list/require-where-update-many.js';
+import { unstablePagination } from './list/unstable-pagination.js';
 
 // TODO: migrate current rules to the new return type
 export const RULES_LIST: RegisteredRule[] = [
@@ -113,5 +115,12 @@ export const RULES_LIST: RegisteredRule[] = [
     methods: [...PRISMA_CRUD_METHODS],
     requireSchema: true,
     function: noUnindexedFilter,
+  },
+  {
+    name: 'unstable-pagination',
+    astType: 'callExpression',
+    methods: [...PRISMA_READ_METHODS],
+    requireSchema: true,
+    function: unstablePagination,
   },
 ];
