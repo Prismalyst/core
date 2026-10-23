@@ -4,16 +4,13 @@ import { describe, expect, it } from 'vitest';
 import type { PrismaExpression } from '../../../types/prisma.types.js';
 import type { DMMFType, RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
-import { createDmmf } from '../utils/dmmf/create-dmmf.js';
-
 import { unstablePagination } from '../../../rules/list/unstable-pagination.js';
 
 import { createAstParser } from '../../../ast/parser/create-ast-parser.js';
 import { createNodeUtils } from '../../../ast/utils/create-node-utils.js';
 import { getProperty } from '../../../ast/utils/get-property.js';
-
-type Model = DMMFType['datamodel']['models'][number];
-type Field = Model['fields'][number];
+import { createDmmf } from '../../helpers/dmmf/create-dmmf.js';
+import { createField } from '../../helpers/dmmf/create-field.js';
 
 const rule: RuleWithoutFunction = {
   name: 'unstable-pagination',
@@ -21,24 +18,6 @@ const rule: RuleWithoutFunction = {
   methods: ['findMany'],
   requireSchema: true,
 };
-
-function createField(
-  name: string,
-  options: Partial<Pick<Field, 'isUnique' | 'isId' | 'isRequired'>> = {},
-): Field {
-  return {
-    name,
-    kind: 'scalar',
-    type: 'String',
-    isRequired: true,
-    isList: false,
-    isUnique: false,
-    isId: false,
-    isReadOnly: false,
-    hasDefaultValue: false,
-    ...options,
-  };
-}
 
 const baseDmmf = createDmmf([]);
 const dmmf: DMMFType = {
