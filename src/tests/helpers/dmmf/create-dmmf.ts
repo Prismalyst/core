@@ -1,4 +1,4 @@
-import type { DMMFType } from '../../../../types/rule.eslint.types.js';
+import type { DMMFType } from '../../../types/rule.eslint.types.js';
 
 export function createDmmf(indexes: DMMFType['datamodel']['indexes']): DMMFType {
   return {
