@@ -1,14 +1,12 @@
 import * as TS from 'typescript';
 import { describe, expect, it } from 'vitest';
 
-import type { PrismaExpression } from '../../../types/prisma.types.js';
 import type { DMMFType, RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
 import { unstablePagination } from '../../../rules/list/unstable-pagination.js';
 
-import { createAstParser } from '../../../ast/parser/create-ast-parser.js';
-import { createNodeUtils } from '../../../ast/utils/create-node-utils.js';
 import { getProperty } from '../../../ast/utils/get-property.js';
+import { createExpression } from '../../helpers/create-expression.js';
 import { createDmmf } from '../../helpers/dmmf/create-dmmf.js';
 import { createField } from '../../helpers/dmmf/create-field.js';
 
@@ -61,39 +59,6 @@ const dmmf: DMMFType = {
   },
 };
 
-const checker = TS.createProgram([], {}).getTypeChecker();
-const { parseArgument } = createNodeUtils(TS, checker);
-const { findCallExpressions } = createAstParser(TS);
-
-function createExpression(
-  argument: string,
-  model: string | null = 'User',
-): Pick<PrismaExpression, 'method' | 'args' | 'prismaContext'> {
-  const sourceFile = TS.createSourceFile(
-    'query.ts',
-    `prisma.user.findMany(${argument});`,
-    TS.ScriptTarget.Latest,
-    true,
-  );
-  const call = findCallExpressions(sourceFile)[0];
-
-  if (!call) throw new Error('Expected a query call in the test source.');
-
-  const firstArg = parseArgument(call);
-
-  return {
-    method: 'findMany',
-    args: firstArg ? [firstArg] : [],
-    prismaContext: {
-      isFloatingPrismaPromise: false,
-      isExpressionInsideTransaction: false,
-      transactionType: null,
-      clientType: 'prisma',
-      model,
-    },
-  };
-}
-
 describe('unstablePagination', () => {
   it.each([
     { name: 'a nonunique field', orderBy: "{ createdAt: 'desc' }", expected: true },
@@ -145,7 +110,7 @@ describe('unstablePagination', () => {
       expected: true,
     },
   ])('returns violation=$expected for $name', ({ orderBy, expected }) => {
-    const expression = createExpression(`{ take: 10, orderBy: ${orderBy} }`);
+    const expression = createExpression('findMany', 'User', `{ take: 10, orderBy: ${orderBy} }`);
 
     expect(unstablePagination(expression, rule, {}, dmmf).isTriggered).toBe(expected);
   });
@@ -158,7 +123,11 @@ describe('unstablePagination', () => {
   ])(
     'returns violation=$expected for compound primary key order $orderBy',
     ({ orderBy, expected }) => {
-      const expression = createExpression(`{ take: 10, orderBy: ${orderBy} }`, 'Membership');
+      const expression = createExpression(
+        'findMany',
+        'Membership',
+        `{ take: 10, orderBy: ${orderBy} }`,
+      );
 
       expect(unstablePagination(expression, rule, {}, dmmf).isTriggered).toBe(expected);
     },
@@ -175,7 +144,9 @@ describe('unstablePagination', () => {
     '{ take: 10, orderBy: [] }',
     '{ take: 10, orderBy: null }',
   ])('ignores a query outside the rule scope: %s', (argument) => {
-    expect(unstablePagination(createExpression(argument), rule, {}, dmmf)).toEqual({
+    expect(
+      unstablePagination(createExpression('findMany', 'User', argument), rule, {}, dmmf),
+    ).toEqual({
       isTriggered: false,
     });
   });
@@ -183,21 +154,32 @@ describe('unstablePagination', () => {
   it.each([null, 'MissingModel'])(
     'ignores a query without schema metadata for model %s',
     (model) => {
-      const expression = createExpression("{ take: 10, orderBy: { createdAt: 'desc' } }", model);
+      const expression = createExpression(
+        'findMany',
+        model,
+        "{ take: 10, orderBy: { createdAt: 'desc' } }",
+      );
 
       expect(unstablePagination(expression, rule, {}, dmmf)).toEqual({ isTriggered: false });
     },
   );
 
   it('ignores methods outside the rule', () => {
-    const expression = createExpression("{ take: 10, orderBy: { createdAt: 'desc' } }");
-    expression.method = 'updateMany';
+    const expression = createExpression(
+      'updateMany',
+      'User',
+      "{ take: 10, orderBy: { createdAt: 'desc' } }",
+    );
 
     expect(unstablePagination(expression, rule, {}, dmmf)).toEqual({ isTriggered: false });
   });
 
   it('highlights the inline orderBy property', () => {
-    const expression = createExpression("{ take: 10, orderBy: { createdAt: 'desc' } }");
+    const expression = createExpression(
+      'findMany',
+      'User',
+      "{ take: 10, orderBy: { createdAt: 'desc' } }",
+    );
     const result = unstablePagination(expression, rule, {}, dmmf);
 
     expect(result.isTriggered).toBe(true);
@@ -205,7 +187,11 @@ describe('unstablePagination', () => {
   });
 
   it('reports the orderBy node when it has no parent', () => {
-    const expression = createExpression("{ take: 10, orderBy: { createdAt: 'desc' } }");
+    const expression = createExpression(
+      'findMany',
+      'User',
+      "{ take: 10, orderBy: { createdAt: 'desc' } }",
+    );
     const orderBy = getProperty(expression.args[0], ['orderBy']);
 
     if (!orderBy) throw new Error('Expected an orderBy property in the test query.');

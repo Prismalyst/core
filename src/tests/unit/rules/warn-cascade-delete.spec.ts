@@ -1,12 +1,10 @@
-import * as TS from 'typescript';
 import { describe, expect, it } from 'vitest';
 
-import type { PrismaExpression, PrismaExpressionExpression } from '../../../types/prisma.types.js';
 import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
 import { warnCascadeDelete } from '../../../rules/list/warn-cascade-delete.js';
 
-import { createAstParser } from '../../../ast/parser/create-ast-parser.js';
+import { createExpression } from '../../helpers/create-expression.js';
 import { createModel } from '../../helpers/dmmf/create-model.js';
 import { createRelation } from '../../helpers/dmmf/create-relation.js';
 import { createSchema } from '../../helpers/dmmf/create-schema.js';
@@ -23,48 +21,22 @@ const postModel = createModel('Post', [
   createRelation('author', 'User', { relationOnDelete: 'Cascade' }),
 ]);
 const dmmf = createSchema([userModel, postModel]);
-const { findCallExpressions } = createAstParser(TS);
-
-function createExpression(
-  method = 'delete',
-  model: string | null = 'User',
-  argument = '{ where: { id: 1 } }',
-): Pick<PrismaExpression, 'node' | 'method' | 'prismaContext'> {
-  const delegate = model ? model.charAt(0).toLowerCase() + model.slice(1) : 'user';
-  const sourceFile = TS.createSourceFile(
-    'query.ts',
-    `prisma.${delegate}.${method}(${argument});`,
-    TS.ScriptTarget.Latest,
-    true,
-  );
-  const call = findCallExpressions(sourceFile)[0];
-
-  if (!call || !TS.isPropertyAccessExpression(call.expression)) {
-    throw new Error('Expected a Prisma method call in the test source.');
-  }
-
-  return {
-    node: call as PrismaExpressionExpression,
-    method,
-    prismaContext: {
-      isFloatingPrismaPromise: false,
-      isExpressionInsideTransaction: false,
-      transactionType: null,
-      clientType: 'prisma',
-      model,
-    },
-  };
-}
+const deleteArgument = '{ where: { id: 1 } }';
 
 describe('warnCascadeDelete', () => {
   it.each(rule.methods)('reports an incoming cascade for %s', (method) => {
-    expect(warnCascadeDelete(createExpression(method), rule, {}, dmmf).isTriggered).toBe(true);
+    expect(
+      warnCascadeDelete(createExpression(method, 'User', deleteArgument), rule, {}, dmmf)
+        .isTriggered,
+    ).toBe(true);
   });
 
   it.each(['findMany', 'create', 'update', 'updateMany', 'upsert', 'count'])(
     'ignores the unsupported method %s even when cascade relations exist',
     (method) => {
-      expect(warnCascadeDelete(createExpression(method), rule, {}, dmmf)).toEqual({
+      expect(
+        warnCascadeDelete(createExpression(method, 'User', deleteArgument), rule, {}, dmmf),
+      ).toEqual({
         isTriggered: false,
       });
     },
@@ -73,18 +45,27 @@ describe('warnCascadeDelete', () => {
   it('uses the configured methods', () => {
     const customRule = { ...rule, methods: ['deleteMany'] };
 
-    expect(warnCascadeDelete(createExpression('delete'), customRule, {}, dmmf)).toEqual({
+    expect(
+      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), customRule, {}, dmmf),
+    ).toEqual({
       isTriggered: false,
     });
     expect(
-      warnCascadeDelete(createExpression('deleteMany'), customRule, {}, dmmf).isTriggered,
+      warnCascadeDelete(
+        createExpression('deleteMany', 'User', deleteArgument),
+        customRule,
+        {},
+        dmmf,
+      ).isTriggered,
     ).toBe(true);
   });
 
   it.each([null, 'MissingModel', 'user'])(
     'ignores a query without schema metadata for model %s',
     (model) => {
-      expect(warnCascadeDelete(createExpression('delete', model), rule, {}, dmmf)).toEqual({
+      expect(
+        warnCascadeDelete(createExpression('delete', model, deleteArgument), rule, {}, dmmf),
+      ).toEqual({
         isTriggered: false,
       });
     },
@@ -94,19 +75,35 @@ describe('warnCascadeDelete', () => {
     { name: 'an empty schema', models: [] },
     { name: 'a schema missing the referenced model', models: [postModel] },
   ])('ignores $name', ({ models }) => {
-    expect(warnCascadeDelete(createExpression(), rule, {}, createSchema(models))).toEqual({
+    expect(
+      warnCascadeDelete(
+        createExpression('delete', 'User', deleteArgument),
+        rule,
+        {},
+        createSchema(models),
+      ),
+    ).toEqual({
       isTriggered: false,
     });
   });
 
   it('allows deleting a model without dependent relations', () => {
-    expect(warnCascadeDelete(createExpression(), rule, {}, createSchema([userModel]))).toEqual({
+    expect(
+      warnCascadeDelete(
+        createExpression('delete', 'User', deleteArgument),
+        rule,
+        {},
+        createSchema([userModel]),
+      ),
+    ).toEqual({
       isTriggered: false,
     });
   });
 
   it('does not treat deleting a child as deleting its parent', () => {
-    expect(warnCascadeDelete(createExpression('delete', 'Post'), rule, {}, dmmf)).toEqual({
+    expect(
+      warnCascadeDelete(createExpression('delete', 'Post', deleteArgument), rule, {}, dmmf),
+    ).toEqual({
       isTriggered: false,
     });
   });
@@ -124,7 +121,9 @@ describe('warnCascadeDelete', () => {
       createModel('Post', [createRelation('author', 'User', options)]),
     ]);
 
-    expect(warnCascadeDelete(createExpression(), rule, {}, schema)).toEqual({
+    expect(
+      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema),
+    ).toEqual({
       isTriggered: false,
     });
   });
@@ -136,7 +135,9 @@ describe('warnCascadeDelete', () => {
       createModel('Post', [createRelation('project', 'Project', { relationOnDelete: 'Cascade' })]),
     ]);
 
-    expect(warnCascadeDelete(createExpression(), rule, {}, schema)).toEqual({
+    expect(
+      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema),
+    ).toEqual({
       isTriggered: false,
     });
   });
@@ -152,7 +153,10 @@ describe('warnCascadeDelete', () => {
       ]),
     ]);
 
-    expect(warnCascadeDelete(createExpression(), rule, {}, schema).isTriggered).toBe(true);
+    expect(
+      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema)
+        .isTriggered,
+    ).toBe(true);
   });
 
   it('reports a cascade through an optional relation', () => {
@@ -163,7 +167,10 @@ describe('warnCascadeDelete', () => {
       ]),
     ]);
 
-    expect(warnCascadeDelete(createExpression(), rule, {}, schema).isTriggered).toBe(true);
+    expect(
+      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema)
+        .isTriggered,
+    ).toBe(true);
   });
 
   it('reports a one-to-one cascade only when deleting the referenced model', () => {
@@ -178,8 +185,13 @@ describe('warnCascadeDelete', () => {
       createModel('Profile', [createRelation('user', 'User', { relationOnDelete: 'Cascade' })]),
     ]);
 
-    expect(warnCascadeDelete(createExpression(), rule, {}, schema).isTriggered).toBe(true);
-    expect(warnCascadeDelete(createExpression('delete', 'Profile'), rule, {}, schema)).toEqual({
+    expect(
+      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema)
+        .isTriggered,
+    ).toBe(true);
+    expect(
+      warnCascadeDelete(createExpression('delete', 'Profile', deleteArgument), rule, {}, schema),
+    ).toEqual({
       isTriggered: false,
     });
   });
@@ -196,7 +208,10 @@ describe('warnCascadeDelete', () => {
       ]),
     ]);
 
-    expect(warnCascadeDelete(createExpression(), rule, {}, schema).isTriggered).toBe(true);
+    expect(
+      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema)
+        .isTriggered,
+    ).toBe(true);
   });
 
   it('reports a cascading self-relation', () => {
@@ -204,7 +219,10 @@ describe('warnCascadeDelete', () => {
       createModel('User', [createRelation('manager', 'User', { relationOnDelete: 'Cascade' })]),
     ]);
 
-    expect(warnCascadeDelete(createExpression(), rule, {}, schema).isTriggered).toBe(true);
+    expect(
+      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema)
+        .isTriggered,
+    ).toBe(true);
   });
 
   it.each([
@@ -218,9 +236,10 @@ describe('warnCascadeDelete', () => {
       createModel('Comment', [createRelation('post', 'Post', { relationOnDelete: 'Cascade' })]),
     ]);
 
-    expect(warnCascadeDelete(createExpression('delete', model), rule, {}, schema).isTriggered).toBe(
-      expected,
-    );
+    expect(
+      warnCascadeDelete(createExpression('delete', model, deleteArgument), rule, {}, schema)
+        .isTriggered,
+    ).toBe(expected);
   });
 
   it('does not follow a cascade beyond a non-cascading relation', () => {
@@ -230,7 +249,9 @@ describe('warnCascadeDelete', () => {
       createModel('Comment', [createRelation('post', 'Post', { relationOnDelete: 'Cascade' })]),
     ]);
 
-    expect(warnCascadeDelete(createExpression(), rule, {}, schema)).toEqual({
+    expect(
+      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema),
+    ).toEqual({
       isTriggered: false,
     });
   });
@@ -246,7 +267,7 @@ describe('warnCascadeDelete', () => {
   );
 
   it.each(rule.methods)('highlights the method expression for %s', (method) => {
-    const expression = createExpression(method);
+    const expression = createExpression(method, 'User', deleteArgument);
     const result = warnCascadeDelete(expression, rule, {}, dmmf);
 
     expect(result.isTriggered).toBe(true);
