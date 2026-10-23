@@ -4,11 +4,10 @@ import { describe, expect, it } from 'vitest';
 import type { PrismaContext } from '../../../types/prisma.types.js';
 import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
-import { createDmmf } from '../utils/dmmf/create-dmmf.js';
-import { createIndex } from '../utils/dmmf/create-index.js';
-
 import { noUnindexedFilter } from '../../../rules/list/no-unindexed-filter.js';
 
+import { createDmmf } from '../../helpers/dmmf/create-dmmf.js';
+import { createIndex } from '../../helpers/dmmf/create-index.js';
 import { wrapArguments } from '../../helpers/wrap-arguments.js';
 
 const rule: RuleWithoutFunction = {
