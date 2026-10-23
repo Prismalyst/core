@@ -18,6 +18,7 @@ type RulesWithoutOptions = {
   'no-root-client-in-transaction': NoOptions;
   'no-unindexed-filter': NoOptions;
   'unstable-pagination': NoOptions;
+  'warn-cascade-delete': NoOptions;
 };
 
 type RulesWithOptions = {

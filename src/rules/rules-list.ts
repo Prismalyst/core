@@ -2,6 +2,7 @@ import { RegisteredRule } from './types/rules-options.types.js';
 
 import {
   PRISMA_CRUD_METHODS,
+  PRISMA_DELETE_METHODS,
   PRISMA_METHODS,
   PRISMA_READ_METHODS,
   PRISMA_SQL_HELPERS,
@@ -22,6 +23,7 @@ import { noUnsafeRawSQL } from './list/no-unsafe-raw-sql.js';
 import { requireWhereDeleteMany } from './list/require-where-delete-many.js';
 import { requireWhereUpdateMany } from './list/require-where-update-many.js';
 import { unstablePagination } from './list/unstable-pagination.js';
+import { warnCascadeDelete } from './list/warn-cascade-delete.js';
 
 // TODO: migrate current rules to the new return type
 export const RULES_LIST: RegisteredRule[] = [
@@ -122,5 +124,12 @@ export const RULES_LIST: RegisteredRule[] = [
     methods: [...PRISMA_READ_METHODS],
     requireSchema: true,
     function: unstablePagination,
+  },
+  {
+    name: 'warn-cascade-delete',
+    astType: 'callExpression',
+    methods: [...PRISMA_DELETE_METHODS],
+    requireSchema: true,
+    function: warnCascadeDelete,
   },
 ];
