@@ -9,6 +9,7 @@ import {
   PRISMA_UNSAFE_SQL_METHODS,
 } from '../constants/prisma-methods.constants.js';
 
+import { limitRelationLoading } from './list/limit-relation-loading.js';
 import { maxTake } from './list/max-take.js';
 import { noDeepOffsetPagination } from './list/no-deep-offset-pagination.js';
 import { noDisconnectInRequestFlow } from './list/no-disconnect-in-request-flow.js';
@@ -131,5 +132,12 @@ export const RULES_LIST: RegisteredRule[] = [
     methods: [...PRISMA_DELETE_METHODS],
     requireSchema: true,
     function: warnCascadeDelete,
+  },
+  {
+    name: 'limit-relation-loading',
+    astType: 'callExpression',
+    methods: [...PRISMA_CRUD_METHODS],
+    requireSchema: true,
+    function: limitRelationLoading,
   },
 ];

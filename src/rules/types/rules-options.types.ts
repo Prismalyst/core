@@ -19,6 +19,7 @@ type RulesWithoutOptions = {
   'no-unindexed-filter': NoOptions;
   'unstable-pagination': NoOptions;
   'warn-cascade-delete': NoOptions;
+  'limit-relation-loading': NoOptions;
 };
 
 type RulesWithOptions = {
