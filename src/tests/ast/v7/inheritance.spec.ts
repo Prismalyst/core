@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createAstParser } from '../../../ast/parser/create-ast-parser.js';
 import { createAstUtils } from '../../../ast/utils/create-ast-utils.js';
+import { wrapArguments } from '../../helpers/wrap-arguments.js';
 import { createTestProgram } from './helpers/create-test-program.js';
 import { getPrismaExpressions } from './helpers/get-prisma-expressions.js';
 
@@ -66,7 +67,7 @@ describe('Inheritance', () => {
     expect(prismaExpressions[2]).toEqual(
       expect.objectContaining({
         method: 'create',
-        args: [{ data: { authorId: 1, postId: 1, body: 'x' } }],
+        args: wrapArguments([{ data: { authorId: 1, postId: 1, body: 'x' } }]),
         prismaContext: { ...prismaContext, model: 'Comment' },
         expressionContext,
       }),

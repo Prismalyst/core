@@ -33,6 +33,7 @@
     "@eslint/js": "^10.0.1",
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
+    "@prisma/dmmf": "^7.10.1",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/node": "^26.6.5",
     "eslint": "^10.13.0",
@@ -41,6 +42,7 @@
     "prisma": "7.10.1",
     "rollup": "^4.64.8",
     "typescript": "6.0.3",
+    "typescript-7": "npm:typescript@7.0.2",
     "typescript-eslint": "^8.71.2",
     "vitest": "^5.0.5"
   }

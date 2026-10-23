@@ -1,8 +1,12 @@
 import type * as TS from 'typescript';
 
-import { AstObject, AstTypeValue, AstValue } from '../../types/ast.types.js';
+import { AstObject, AstTypeValue, ParsedValue } from '../../types/ast.types.js';
+
+import { getProperty } from './get-property.js';
 
 export function createNodeUtils(ts: typeof TS, checker: TS.TypeChecker) {
+  const activeValues = new Set<TS.Node>();
+
   function isCallExpression(node: TS.Node) {
     return ts.isCallExpression(node);
   }
@@ -145,7 +149,7 @@ export function createNodeUtils(ts: typeof TS, checker: TS.TypeChecker) {
   function parseArgument(
     node: TS.CallExpression | TS.NewExpression,
     index = 0,
-  ): AstValue | undefined {
+  ): ParsedValue | undefined {
     const argument = node.arguments?.[index];
 
     if (!argument) {
@@ -155,218 +159,225 @@ export function createNodeUtils(ts: typeof TS, checker: TS.TypeChecker) {
     return parseValue(argument, checker);
   }
 
-  function parseObject(node: TS.ObjectLiteralExpression): AstObject {
-    let result: AstObject = {};
+  function parseObject(node: TS.ObjectLiteralExpression): ParsedValue<AstObject> {
+    const fields = new Map<string, ParsedValue>();
 
     for (const property of node.properties) {
       if (ts.isPropertyAssignment(property)) {
         const name = getPropertyName(property.name);
 
-        result[name] = parseValue(property.initializer, checker);
+        const parsed = parseValue(property.initializer, checker);
+
+        fields.set(name, { ...parsed, node: property.name });
         continue;
       }
 
       if (ts.isShorthandPropertyAssignment(property)) {
-        result[property.name.text] = parseValue(property.name, checker);
+        const parsed = parseValue(property.name, checker);
+
+        fields.set(property.name.text, { ...parsed, node: property.name });
+        continue;
       }
 
       if (ts.isSpreadAssignment(property)) {
-        const value = parseValue(property.expression, checker);
+        const parsed = parseValue(property.expression, checker);
+        const value = parsed.value;
 
-        result = { ...result, ...(value as AstObject) };
+        if (typeof value !== 'object' || value === null) continue;
+
+        for (const name of Object.keys(value)) {
+          const field = getProperty(parsed, [Array.isArray(value) ? Number(name) : name]);
+
+          if (field) fields.set(name, field);
+        }
       }
     }
 
-    return result;
+    return { value: Object.fromEntries(fields), node };
   }
 
   function parsePropertyAccess(
     node: TS.PropertyAccessExpression,
     checker: TS.TypeChecker,
-  ): AstValue | undefined {
-    const objectExpression = node.expression;
-    const propertyName = node.name.text;
+  ): ParsedValue {
+    const object = parseValue(node.expression, checker);
+    const property = getProperty(object, [node.name.text]);
 
-    if (!ts.isIdentifier(objectExpression)) {
-      return undefined;
-    }
-
-    const symbol = checker.getSymbolAtLocation(objectExpression);
-
-    if (!symbol?.valueDeclaration) {
-      return undefined;
-    }
-
-    const declaration = symbol.valueDeclaration;
-
-    if (
-      !ts.isVariableDeclaration(declaration) ||
-      !declaration.initializer ||
-      !ts.isObjectLiteralExpression(declaration.initializer)
-    ) {
-      return undefined;
-    }
-
-    const objectLiteral = declaration.initializer;
-
-    for (const property of objectLiteral.properties) {
-      // { active: something }
-      if (ts.isPropertyAssignment(property) && property.name.getText() === propertyName) {
-        return parseValue(property.initializer, checker);
-      }
-
-      // { active }
-      if (ts.isShorthandPropertyAssignment(property) && property.name.text === propertyName) {
-        return parseValue(property.name, checker);
-      }
-    }
-
-    return undefined;
+    return { value: property?.value, node };
   }
 
-  function parseIdentifier(node: TS.Identifier, checker: TS.TypeChecker): AstValue | AstTypeValue {
+  function parseIdentifier(node: TS.Identifier, checker: TS.TypeChecker): ParsedValue {
     const symbol = checker.getSymbolAtLocation(node);
 
     if (!symbol) {
-      return node;
+      return { value: node, node };
     }
 
     const declaration = symbol.valueDeclaration;
 
     if (!declaration) {
-      return node;
+      // The global undefined symbol has no value declaration.
+      if (checker.getTypeAtLocation(node).flags & ts.TypeFlags.Undefined) {
+        return { value: undefined, node };
+      }
+
+      return { value: node, node };
     }
 
     if (ts.isVariableDeclaration(declaration) && declaration.initializer) {
-      return parseValue(declaration.initializer, checker);
+      const parsed = parseValue(declaration.initializer, checker);
+
+      return { ...parsed, node };
     }
 
     const type = checker.getTypeAtLocation(node);
 
-    return parseType(type, checker);
+    return parseType(type, checker, node);
   }
 
-  function parseType(type: TS.Type, checker: TS.TypeChecker): AstTypeValue {
-    if (type.flags & ts.TypeFlags.Undefined) {
-      return undefined;
+  function parseType(
+    type: TS.Type,
+    checker: TS.TypeChecker,
+    node: TS.Node,
+    activeTypes = new Set<TS.Type>(),
+  ): ParsedValue<AstTypeValue> {
+    if (activeTypes.has(type)) {
+      return { value: { kind: 'type', type: 'unknown' }, node };
     }
 
-    if (type.flags & ts.TypeFlags.Null) {
-      return null;
+    activeTypes.add(type);
+
+    try {
+      if (type.flags & ts.TypeFlags.Undefined) return { value: undefined, node };
+      if (type.flags & ts.TypeFlags.Null) return { value: null, node };
+
+      if (type.flags & ts.TypeFlags.StringLiteral) {
+        return { value: (type as TS.StringLiteralType).value, node };
+      }
+
+      if (type.flags & ts.TypeFlags.NumberLiteral) {
+        return { value: (type as TS.NumberLiteralType).value, node };
+      }
+
+      if (type.flags & ts.TypeFlags.BooleanLiteral) {
+        return { value: checker.typeToString(type) === 'true', node };
+      }
+
+      if (type.flags & ts.TypeFlags.String) {
+        return { value: { kind: 'type', type: 'string' }, node };
+      }
+
+      if (type.flags & ts.TypeFlags.Number) {
+        return { value: { kind: 'type', type: 'number' }, node };
+      }
+
+      if (type.flags & ts.TypeFlags.Boolean) {
+        return { value: { kind: 'type', type: 'boolean' }, node };
+      }
+
+      if (type.isUnion()) {
+        return {
+          value: {
+            kind: 'union',
+            types: type.types.map((member) => parseType(member, checker, node, activeTypes)),
+          },
+          node,
+        };
+      }
+
+      if (checker.isArrayType(type)) {
+        const elementType = checker.getTypeArguments(type as TS.TypeReference)[0];
+
+        return {
+          value: {
+            kind: 'array',
+            element: elementType
+              ? parseType(elementType, checker, node, activeTypes)
+              : { value: { kind: 'type', type: 'unknown' }, node },
+          },
+          node,
+        };
+      }
+
+      if (type.flags & ts.TypeFlags.Object) {
+        const properties = checker.getPropertiesOfType(type);
+
+        return {
+          value: Object.fromEntries(
+            properties.map((property) => {
+              const declaration = property.valueDeclaration ?? property.declarations?.[0];
+
+              if (!declaration) {
+                return [property.name, { value: { kind: 'type', type: 'unknown' }, node }];
+              }
+
+              const propertyType = checker.getTypeOfSymbolAtLocation(property, declaration);
+              const propertyNode = ts.getNameOfDeclaration(declaration) ?? node;
+
+              return [property.name, parseType(propertyType, checker, propertyNode, activeTypes)];
+            }),
+          ),
+          node,
+        };
+      }
+
+      return { value: { kind: 'type', type: 'unknown' }, node };
+    } finally {
+      activeTypes.delete(type);
     }
-
-    if (type.flags & ts.TypeFlags.StringLiteral) {
-      return (type as TS.StringLiteralType).value;
-    }
-
-    if (type.flags & ts.TypeFlags.NumberLiteral) {
-      return (type as TS.NumberLiteralType).value;
-    }
-
-    if (type.flags & ts.TypeFlags.BooleanLiteral) {
-      return checker.typeToString(type) === 'true';
-    }
-
-    if (type.flags & ts.TypeFlags.String) {
-      return {
-        kind: 'type',
-        type: 'string',
-      };
-    }
-
-    if (type.flags & ts.TypeFlags.Number) {
-      return {
-        kind: 'type',
-        type: 'number',
-      };
-    }
-
-    if (type.flags & ts.TypeFlags.Boolean) {
-      return {
-        kind: 'type',
-        type: 'boolean',
-      };
-    }
-
-    if (type.isUnion()) {
-      return {
-        kind: 'union',
-        types: type.types.map((type) => parseType(type, checker)),
-      };
-    }
-
-    if (type.flags & ts.TypeFlags.Object) {
-      const properties = checker.getPropertiesOfType(type);
-
-      return {
-        kind: 'object',
-        properties: Object.fromEntries(
-          properties.map((property) => {
-            const declaration = property.valueDeclaration ?? property.declarations?.[0];
-
-            if (!declaration) {
-              return [
-                property.name,
-                {
-                  kind: 'type',
-                  type: 'unknown',
-                } satisfies AstTypeValue,
-              ];
-            }
-
-            const propertyType = checker.getTypeOfSymbolAtLocation(property, declaration);
-
-            return [property.name, parseType(propertyType, checker)];
-          }),
-        ),
-      };
-    }
-
-    return {
-      kind: 'type',
-      type: 'unknown',
-    };
   }
 
-  function parseValue(node: TS.Expression, checker: TS.TypeChecker): AstValue {
+  function parseValue(node: TS.Expression, checker: TS.TypeChecker): ParsedValue {
+    if (activeValues.has(node)) return { value: node, node };
+
+    activeValues.add(node);
+
+    try {
+      return parseExpression(node, checker);
+    } finally {
+      activeValues.delete(node);
+    }
+  }
+
+  function parseExpression(node: TS.Expression, checker: TS.TypeChecker): ParsedValue {
     if (ts.isObjectLiteralExpression(node)) {
       return parseObject(node);
     }
 
     if (ts.isArrayLiteralExpression(node)) {
-      return node.elements.map((element) => parseValue(element, checker));
+      return { value: node.elements.map((element) => parseValue(element, checker)), node };
     }
 
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
-      return node.text;
+      return { value: node.text, node };
     }
 
     if (ts.isNumericLiteral(node)) {
-      return Number(node.text);
+      return { value: Number(node.text), node };
     }
 
     if (ts.isPrefixUnaryExpression(node) && ts.isNumericLiteral(node.operand)) {
       const value = Number(node.operand.text);
 
       if (node.operator === ts.SyntaxKind.MinusToken) {
-        return -value;
+        return { value: -value, node };
       }
 
       if (node.operator === ts.SyntaxKind.PlusToken) {
-        return value;
+        return { value, node };
       }
     }
 
     if (node.kind === ts.SyntaxKind.TrueKeyword) {
-      return true;
+      return { value: true, node };
     }
 
     if (node.kind === ts.SyntaxKind.FalseKeyword) {
-      return false;
+      return { value: false, node };
     }
 
     if (node.kind === ts.SyntaxKind.NullKeyword) {
-      return null;
+      return { value: null, node };
     }
 
     if (ts.isIdentifier(node)) {
@@ -388,16 +399,15 @@ export function createNodeUtils(ts: typeof TS, checker: TS.TypeChecker) {
       });
 
       return {
-        kind: 'template',
-        raw: node.getText(),
-        templateSpans,
+        value: { kind: 'template', raw: node.getText(), templateSpans },
+        node,
       };
     }
 
     // getWhere()
     // new Date()
     // etc.
-    return node;
+    return { value: node, node };
   }
 
   return {

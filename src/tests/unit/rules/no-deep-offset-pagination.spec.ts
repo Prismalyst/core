@@ -4,10 +4,13 @@ import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
 import { noDeepOffsetPagination } from '../../../rules/list/no-deep-offset-pagination.js';
 
+import { wrapArguments } from '../../helpers/wrap-arguments.js';
+
 const rule: RuleWithoutFunction = {
   name: 'no-deep-offset-pagination',
   astType: 'callExpression',
   methods: ['findMany'],
+  requireSchema: false,
 };
 
 describe('noDeepOffsetPagination', () => {
@@ -28,14 +31,17 @@ describe('noDeepOffsetPagination', () => {
     'returns violation=$expected for skip=$skip with min=$min and max=$max',
     ({ skip, min, max, expected }) => {
       expect(
-        noDeepOffsetPagination({ method: 'findMany', args: [{ skip }] }, rule, { min, max }),
+        noDeepOffsetPagination({ method: 'findMany', args: wrapArguments([{ skip }]) }, rule, {
+          min,
+          max,
+        }),
       ).toBe(expected);
     },
   );
 
   it('ignores methods outside the rule even when skip exceeds the maximum', () => {
     expect(
-      noDeepOffsetPagination({ method: 'findFirst', args: [{ skip: 1001 }] }, rule, {
+      noDeepOffsetPagination({ method: 'findFirst', args: wrapArguments([{ skip: 1001 }]) }, rule, {
         min: -1000,
         max: 1000,
       }),
@@ -52,16 +58,24 @@ describe('noDeepOffsetPagination', () => {
     const customRule = { ...rule, methods: ['findFirst'] };
 
     expect(
-      noDeepOffsetPagination({ method: 'findFirst', args: [{ skip: 1001 }] }, customRule, {
-        min: -1000,
-        max: 1000,
-      }),
+      noDeepOffsetPagination(
+        { method: 'findFirst', args: wrapArguments([{ skip: 1001 }]) },
+        customRule,
+        {
+          min: -1000,
+          max: 1000,
+        },
+      ),
     ).toBe(true);
     expect(
-      noDeepOffsetPagination({ method: 'findMany', args: [{ skip: 1001 }] }, customRule, {
-        min: -1000,
-        max: 1000,
-      }),
+      noDeepOffsetPagination(
+        { method: 'findMany', args: wrapArguments([{ skip: 1001 }]) },
+        customRule,
+        {
+          min: -1000,
+          max: 1000,
+        },
+      ),
     ).toBe(false);
   });
 
@@ -73,7 +87,7 @@ describe('noDeepOffsetPagination', () => {
 
   it('reports an explicitly undefined query argument', () => {
     expect(
-      noDeepOffsetPagination({ method: 'findMany', args: [undefined] }, rule, {
+      noDeepOffsetPagination({ method: 'findMany', args: wrapArguments([undefined]) }, rule, {
         min: -1000,
         max: 1000,
       }),
@@ -86,7 +100,7 @@ describe('noDeepOffsetPagination', () => {
     { name: 'an explicitly undefined skip', argument: { skip: undefined } },
   ])('allows a query with $name', ({ argument }) => {
     expect(
-      noDeepOffsetPagination({ method: 'findMany', args: [argument] }, rule, {
+      noDeepOffsetPagination({ method: 'findMany', args: wrapArguments([argument]) }, rule, {
         min: -1000,
         max: 1000,
       }),
@@ -97,7 +111,7 @@ describe('noDeepOffsetPagination', () => {
     const skip = {};
 
     expect(
-      noDeepOffsetPagination({ method: 'findMany', args: [{ skip }] }, rule, {
+      noDeepOffsetPagination({ method: 'findMany', args: wrapArguments([{ skip }]) }, rule, {
         min: -1000,
         max: 1000,
       }),

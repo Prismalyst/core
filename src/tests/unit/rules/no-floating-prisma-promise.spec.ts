@@ -8,6 +8,7 @@ const rule: RuleWithoutFunction = {
   name: 'no-floating-prisma-promise',
   astType: 'callExpression',
   methods: ['findMany'],
+  requireSchema: false,
 };
 
 const expressionContext = {

@@ -8,6 +8,7 @@ const rule: RuleWithoutFunction = {
   name: 'no-disconnect-in-request-flow',
   astType: 'callExpression',
   methods: ['$disconnect'],
+  requireSchema: false,
 };
 
 const options = { ignoredFiles: [], allowInTests: true };

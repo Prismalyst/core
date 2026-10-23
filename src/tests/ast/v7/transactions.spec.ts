@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createAstParser } from '../../../ast/parser/create-ast-parser.js';
 import { createAstUtils } from '../../../ast/utils/create-ast-utils.js';
+import { wrapArguments } from '../../helpers/wrap-arguments.js';
 import { createTestProgram } from './helpers/create-test-program.js';
 import { getPrismaExpressions } from './helpers/get-prisma-expressions.js';
 
@@ -47,7 +48,7 @@ describe('Transactions', () => {
     expect(prismaExpressions[0]).toEqual(
       expect.objectContaining({
         method: '$transaction',
-        args: [[callExpressions[1], callExpressions[2]]],
+        args: wrapArguments([[callExpressions[1], callExpressions[2]]]),
         prismaContext: { ...prismaContext, transactionType: 'sequential', model: null },
         expressionContext,
       }),
@@ -59,7 +60,7 @@ describe('Transactions', () => {
     expect(prismaExpressions[1]).toEqual(
       expect.objectContaining({
         method: 'create',
-        args: [{ data: { name: 'user', email: 'user@mail' } }],
+        args: wrapArguments([{ data: { name: 'user', email: 'user@mail' } }]),
         prismaContext: {
           ...prismaContext,
           isFloatingPrismaPromise: true,
@@ -76,7 +77,9 @@ describe('Transactions', () => {
     expect(prismaExpressions[2]).toEqual(
       expect.objectContaining({
         method: 'create',
-        args: [{ data: { title: 'title', body: 'body', slug: 'slug', authorId: 1 } }],
+        args: wrapArguments([
+          { data: { title: 'title', body: 'body', slug: 'slug', authorId: 1 } },
+        ]),
         prismaContext: {
           ...prismaContext,
           isFloatingPrismaPromise: true,
@@ -97,7 +100,7 @@ describe('Transactions', () => {
     expect(prismaExpressions[3]).toEqual(
       expect.objectContaining({
         method: '$transaction',
-        args: [callExpressions[3]?.arguments[0]],
+        args: wrapArguments([callExpressions[3]?.arguments[0]]),
         prismaContext: { ...prismaContext, transactionType: 'interactive', model: null },
         expressionContext,
       }),
@@ -126,7 +129,9 @@ describe('Transactions', () => {
     expect(prismaExpressions[5]).toEqual(
       expect.objectContaining({
         method: 'create',
-        args: [{ data: { title: 'title', body: 'body', slug: 'slug', authorId: 1 } }],
+        args: wrapArguments([
+          { data: { title: 'title', body: 'body', slug: 'slug', authorId: 1 } },
+        ]),
         prismaContext: {
           ...prismaContext,
           isExpressionInsideTransaction: true,

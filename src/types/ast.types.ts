@@ -1,13 +1,28 @@
 import type * as TS from 'typescript';
 
 export type AstObject = {
-  [key: string]: AstValue;
+  [key: string]: ParsedValue;
+};
+
+export type ParsedValue<T = AstValue> = {
+  value: T;
+  node: TS.Node;
 };
 
 export type AstValue =
-  AstObject | string | number | boolean | null | undefined | AstValue[] | TS.Expression;
+  | AstObject
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | ParsedValue[]
+  | TS.Expression
+  | AstTypeValue
+  | TemplateAstNode;
 
 export type AstTypeValue =
+  | AstObject
   | string
   | number
   | boolean
@@ -18,19 +33,15 @@ export type AstTypeValue =
       type: 'string' | 'number' | 'boolean' | 'unknown' | 'null' | 'undefined';
     }
   | {
-      kind: 'object';
-      properties: Record<string, AstTypeValue>;
-    }
-  | {
       kind: 'array';
-      element: AstTypeValue;
+      element: ParsedValue<AstTypeValue>;
     }
   | {
       kind: 'union';
-      types: AstTypeValue[];
+      types: ParsedValue<AstTypeValue>[];
     };
 
-type TemplateSpan = { name: string; value?: unknown };
+type TemplateSpan = { name: string; value: ParsedValue };
 
 export type TemplateAstNode = {
   kind: 'template';

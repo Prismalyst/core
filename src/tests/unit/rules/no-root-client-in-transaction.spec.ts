@@ -8,6 +8,7 @@ const rule: RuleWithoutFunction = {
   name: 'no-root-client-in-transaction',
   astType: 'callExpression',
   methods: ['findMany'],
+  requireSchema: false,
 };
 
 const prismaContext = {

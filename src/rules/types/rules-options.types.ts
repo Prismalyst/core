@@ -16,6 +16,10 @@ type RulesWithoutOptions = {
   'require-where-update-many': NoOptions;
   'no-query-in-loop': NoOptions;
   'no-root-client-in-transaction': NoOptions;
+  'no-unindexed-filter': NoOptions;
+  'unstable-pagination': NoOptions;
+  'warn-cascade-delete': NoOptions;
+  'limit-relation-loading': NoOptions;
 };
 
 type RulesWithOptions = {

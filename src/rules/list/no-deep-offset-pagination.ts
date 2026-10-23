@@ -3,6 +3,8 @@ import { RuleOptions, RuleWithoutFunction } from '../../types/rule.eslint.types.
 
 import { isObject } from '../utils/is-object.js';
 
+import { getProperty } from '../../ast/utils/get-property.js';
+
 export interface NoDeepOffsetPaginationOptions {
   max: number;
   min: number;
@@ -17,21 +19,20 @@ export function noDeepOffsetPagination(
 
   if (!isRuleMethod) return false;
 
-  const firstArg = expression.args[0];
+  const firstArg = expression.args[0]?.value;
 
   const isFirstArgIsObject = isObject(firstArg);
 
   if (!isFirstArgIsObject) return true;
 
   // Prisma supports only number or explicit undefined
-  if (typeof firstArg.skip !== 'number') return false;
+  const skip = getProperty(expression.args[0], ['skip'])?.value;
 
-  // Disallow explicit undefined
-  if (firstArg.skip === undefined) return false;
+  if (typeof skip !== 'number') return false;
 
   // Until Prismalyst don't have VS Code extension
   // We can guarantee options and options.max is defined
   // And options.max is a number
   // Because ESLint doesn't allow to pass empty rule's options
-  return firstArg.skip > options.max || firstArg.skip < options.min;
+  return skip > options.max || skip < options.min;
 }
