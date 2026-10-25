@@ -7,7 +7,7 @@ import { createNodeUtils } from '../../ast/utils/create-node-utils.js';
 
 const checker = TS.createProgram([], {}).getTypeChecker();
 
-const { parseArgument } = createNodeUtils(TS, checker);
+const { parseValue } = createNodeUtils(TS, checker);
 const { findCallExpressions } = createAstParser(TS);
 
 export function createExpression(
@@ -30,12 +30,10 @@ export function createExpression(
     throw new Error('Expected a Prisma method call in the test source.');
   }
 
-  const firstArg = parseArgument(call);
-
   return {
     node: call as PrismaExpressionExpression,
     method,
-    args: firstArg ? [firstArg] : [],
+    args: call.arguments.map((arg) => parseValue(arg, checker)),
     expressionContext: {
       isExpressionInsideLoop: false,
       isExpressionInsideFunction: false,
