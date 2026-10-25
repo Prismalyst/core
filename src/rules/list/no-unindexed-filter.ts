@@ -1,5 +1,10 @@
 import { PrismaExpression } from '../../types/prisma.types.js';
-import { DMMFType, RuleOptions, RuleWithoutFunction } from '../../types/rule.eslint.types.js';
+import {
+  DMMFType,
+  RuleOptions,
+  RuleReturnType,
+  RuleWithoutFunction,
+} from '../../types/rule.eslint.types.js';
 
 import { isObjectEmpty } from '../utils/is-object-empty.js';
 import { isObject } from '../utils/is-object.js';
@@ -11,14 +16,18 @@ export function noUnindexedFilter(
   rule: RuleWithoutFunction,
   _options: RuleOptions<Record<PropertyKey, never>>,
   dmmf: DMMFType,
-) {
+): RuleReturnType {
   const isRuleMethod = rule.methods.includes(expression.method);
 
   if (!isRuleMethod) return { isTriggered: false };
 
-  const firstArg = expression.args[0]?.value;
+  const firstArg = expression.args[0];
 
-  const isFirstArgIsObject = isObject(firstArg);
+  if (!firstArg) return { isTriggered: false };
+
+  const firstArgValue = firstArg.value;
+
+  const isFirstArgIsObject = isObject(firstArgValue);
 
   // Prisma already highlights this as an error
   if (!isFirstArgIsObject) return { isTriggered: false };
@@ -67,7 +76,7 @@ export function noUnindexedFilter(
 
     const nodeToHighlight = getProperty(expression.args[0], ['where', unindexedKeys[0]])?.node;
 
-    if (nodeToHighlight === undefined) return { isTriggered: true };
+    if (nodeToHighlight === undefined) return { isTriggered: true, nodeToHighlight: firstArg.node };
 
     return {
       isTriggered: true,
