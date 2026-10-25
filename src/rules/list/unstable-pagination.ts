@@ -29,7 +29,11 @@ export function unstablePagination(
   if (!isFirstArgIsObject) return { isTriggered: false };
 
   const orderBy = getProperty(expression.args[0], ['orderBy']);
-  const orderByArg = orderBy?.value;
+
+  // That's not our case
+  if (orderBy === undefined) return { isTriggered: false };
+
+  const orderByArg = orderBy.value;
 
   // That's not our case
   if (orderByArg === undefined) return { isTriggered: false };
@@ -82,9 +86,7 @@ export function unstablePagination(
 
   if (hasUniqueOrder) return { isTriggered: false };
 
-  const nodeToHighlight = orderBy?.node?.parent ?? orderBy?.node;
-
-  if (!nodeToHighlight) return { isTriggered: true };
+  const nodeToHighlight = orderBy.node.parent ?? orderBy.node;
 
   return { isTriggered: true, nodeToHighlight };
 }
