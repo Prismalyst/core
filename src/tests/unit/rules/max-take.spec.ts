@@ -4,7 +4,7 @@ import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
 import { maxTake } from '../../../rules/list/max-take.js';
 
-import { wrapArguments } from '../../helpers/wrap-arguments.js';
+import { createExpression } from '../../helpers/create-expression.js';
 
 const rule: RuleWithoutFunction = {
   name: 'max-take',
@@ -22,62 +22,95 @@ describe('maxTake', () => {
     { take: 10, max: 10, expected: false },
     { take: 11, max: 10, expected: true },
     { take: 101, max: 200, expected: false },
-  ])('returns violation=$expected for take=$take with max=$max', ({ take, max, expected }) => {
-    expect(maxTake({ method: 'findMany', args: wrapArguments([{ take }]) }, rule, { max })).toBe(
-      expected,
-    );
+  ])('returns isTriggered=$expected for take=$take with max=$max', ({ take, max, expected }) => {
+    const expression = createExpression('findMany', 'User', `{ take: ${take} }`);
+    const result = maxTake(expression, rule, { max });
+
+    expect(result.isTriggered).toBe(expected);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe(String(take));
+    }
   });
 
   it('ignores methods outside the rule even when take exceeds the maximum', () => {
-    expect(
-      maxTake({ method: 'findFirst', args: wrapArguments([{ take: 101 }]) }, rule, { max: 100 }),
-    ).toBe(false);
+    const expression = createExpression('findFirst', 'User', '{ take: 101 }');
+    const result = maxTake(expression, rule, { max: 100 });
+
+    expect(result.isTriggered).toBe(false);
   });
 
   it('ignores methods outside the rule when arguments are missing', () => {
-    expect(maxTake({ method: 'count', args: [] }, rule, { max: 100 })).toBe(false);
-  });
+    const expression = createExpression('count', 'User', '');
+    const result = maxTake(expression, rule, { max: 100 });
 
-  it('reports only methods in the custom rule configuration', () => {
-    const customRule = { ...rule, methods: ['findFirst'] };
-
-    expect(
-      maxTake({ method: 'findFirst', args: wrapArguments([{ take: 101 }]) }, customRule, {
-        max: 100,
-      }),
-    ).toBe(true);
-    expect(
-      maxTake({ method: 'findMany', args: wrapArguments([{ take: 101 }]) }, customRule, {
-        max: 100,
-      }),
-    ).toBe(false);
-  });
-
-  it('reports a query without arguments', () => {
-    expect(maxTake({ method: 'findMany', args: [] }, rule, { max: 100 })).toBe(true);
-  });
-
-  it('reports an explicitly undefined query argument', () => {
-    expect(
-      maxTake({ method: 'findMany', args: wrapArguments([undefined]) }, rule, { max: 100 }),
-    ).toBe(true);
+    expect(result.isTriggered).toBe(false);
   });
 
   it.each([
-    { name: 'an empty options object', argument: {} },
-    { name: 'a filter without take', argument: { where: { active: true } } },
-    { name: 'an explicitly undefined take', argument: { take: undefined } },
-  ])('reports an unbounded query with $name', ({ argument }) => {
-    expect(
-      maxTake({ method: 'findMany', args: wrapArguments([argument]) }, rule, { max: 100 }),
-    ).toBe(true);
+    { method: 'findFirst', expected: true },
+    { method: 'findMany', expected: false },
+  ])('returns isTriggered=$expected for the custom method $method', ({ method, expected }) => {
+    const customRule = { ...rule, methods: ['findFirst'] };
+    const expression = createExpression(method, 'User', '{ take: 101 }');
+    const result = maxTake(expression, customRule, { max: 100 });
+
+    expect(result.isTriggered).toBe(expected);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('101');
+    }
+  });
+
+  it('reports a query without arguments', () => {
+    const expression = createExpression('findMany', 'User', '');
+    const result = maxTake(expression, rule, { max: 100 });
+
+    expect(result.isTriggered).toBe(true);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('prisma.user.findMany()');
+    }
+  });
+
+  it('reports an explicitly undefined query argument', () => {
+    const expression = createExpression('findMany', 'User', 'undefined');
+    const result = maxTake(expression, rule, { max: 100 });
+
+    expect(result.isTriggered).toBe(true);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('undefined');
+    }
+  });
+
+  it.each([
+    { name: 'an empty options object', argument: '{}', highlightedText: '{}' },
+    {
+      name: 'a filter without take',
+      argument: '{ where: { active: true } }',
+      highlightedText: '{ where: { active: true } }',
+    },
+    {
+      name: 'an explicitly undefined take',
+      argument: '{ take: undefined }',
+      highlightedText: 'undefined',
+    },
+  ])('reports an unbounded query with $name', ({ argument, highlightedText }) => {
+    const expression = createExpression('findMany', 'User', argument);
+    const result = maxTake(expression, rule, { max: 100 });
+
+    expect(result.isTriggered).toBe(true);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe(highlightedText);
+    }
   });
 
   it('ignores a non-number take value', () => {
-    const take = {};
+    const expression = createExpression('findMany', 'User', '{ take: {} }');
+    const result = maxTake(expression, rule, { max: 100 });
 
-    expect(
-      maxTake({ method: 'findMany', args: wrapArguments([{ take }]) }, rule, { max: 100 }),
-    ).toBe(false);
+    expect(result.isTriggered).toBe(false);
   });
 });
