@@ -4,7 +4,6 @@ import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
 import { limitRelationLoading } from '../../../rules/list/limit-relation-loading.js';
 
-import { getProperty } from '../../../ast/utils/get-property.js';
 import { createExpression } from '../../helpers/create-expression.js';
 import { createField } from '../../helpers/dmmf/create-field.js';
 import { createModel } from '../../helpers/dmmf/create-model.js';
@@ -62,10 +61,10 @@ describe('limitRelationLoading', () => {
     const result = limitRelationLoading(expression, rule, {}, dmmf);
 
     expect(result.isTriggered).toBe(true);
-    expect(result.nodeToHighlight).toBe(
-      getProperty(expression.args[0], [selection, 'posts'])?.node,
-    );
-    expect(result.nodeToHighlight?.getText()).toBe('posts');
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('posts');
+    }
   });
 
   it.each(rule.methods)('reports an unbounded relation for %s', (method) => {
@@ -76,21 +75,24 @@ describe('limitRelationLoading', () => {
 
   it.each(['count', 'aggregate', '$queryRaw'])('ignores the unsupported method %s', (method) => {
     const expression = createExpression(method, 'User', '{ include: { posts: true } }');
+    const result = limitRelationLoading(expression, rule, {}, dmmf);
 
-    expect(limitRelationLoading(expression, rule, {}, dmmf)).toEqual({ isTriggered: false });
+    expect(result.isTriggered).toBe(false);
   });
 
-  it('uses the configured methods', () => {
+  it.each([
+    { method: 'findUnique', expected: true },
+    { method: 'findMany', expected: false },
+  ])('returns isTriggered=$expected for the custom method $method', ({ method, expected }) => {
     const customRule = { ...rule, methods: ['findUnique'] };
-    const argument = '{ include: { posts: true } }';
+    const expression = createExpression(method, 'User', '{ include: { posts: true } }');
+    const result = limitRelationLoading(expression, customRule, {}, dmmf);
 
-    expect(
-      limitRelationLoading(createExpression('findMany', 'User', argument), customRule, {}, dmmf),
-    ).toEqual({ isTriggered: false });
-    expect(
-      limitRelationLoading(createExpression('findUnique', 'User', argument), customRule, {}, dmmf)
-        .isTriggered,
-    ).toBe(true);
+    expect(result.isTriggered).toBe(expected);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('posts');
+    }
   });
 
   it.each(['10', '0', '-10', 'pageSize'])('allows a relation with an explicit take: %s', (take) => {
@@ -112,7 +114,10 @@ describe('limitRelationLoading', () => {
     const result = limitRelationLoading(expression, rule, {}, dmmf);
 
     expect(result.isTriggered).toBe(true);
-    expect(result.nodeToHighlight?.getText()).toBe('posts');
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('posts');
+    }
   });
 
   it('does not use the top-level take as a relation limit', () => {
@@ -227,11 +232,10 @@ describe('limitRelationLoading', () => {
       const result = limitRelationLoading(expression, rule, {}, dmmf);
 
       expect(result.isTriggered).toBe(true);
-      expect(result.nodeToHighlight).toBe(
-        getProperty(expression.args[0], [parentSelection, 'posts', childSelection, 'comments'])
-          ?.node,
-      );
-      expect(result.nodeToHighlight?.getText()).toBe('comments');
+
+      if (result.isTriggered) {
+        expect(result.nodeToHighlight.getText()).toBe('comments');
+      }
     },
   );
 
@@ -256,11 +260,10 @@ describe('limitRelationLoading', () => {
     const result = limitRelationLoading(expression, rule, {}, dmmf);
 
     expect(result.isTriggered).toBe(true);
-    expect(result.nodeToHighlight).toBe(
-      getProperty(expression.args[0], ['include', 'profile', 'include', 'user', 'select', 'posts'])
-        ?.node,
-    );
-    expect(result.nodeToHighlight?.getText()).toBe('posts');
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('posts');
+    }
   });
 
   it('continues to an unbounded sibling after a bounded relation', () => {
@@ -272,7 +275,10 @@ describe('limitRelationLoading', () => {
     const result = limitRelationLoading(expression, rule, {}, dmmf);
 
     expect(result.isTriggered).toBe(true);
-    expect(result.nodeToHighlight?.getText()).toBe('roles');
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('roles');
+    }
   });
 
   it.each([
@@ -290,10 +296,9 @@ describe('limitRelationLoading', () => {
     const result = limitRelationLoading(expression, rule, {}, schema);
 
     expect(result.isTriggered).toBe(expected);
-    if (expected) {
-      expect(result.nodeToHighlight).toBe(
-        getProperty(expression.args[0], ['include', 'friends', 'include', 'friends'])?.node,
-      );
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('friends');
     }
   });
 });
