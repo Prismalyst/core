@@ -4,7 +4,7 @@ import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
 import { requireWhereDeleteMany } from '../../../rules/list/require-where-delete-many.js';
 
-import { wrapArguments } from '../../helpers/wrap-arguments.js';
+import { createExpression } from '../../helpers/create-expression.js';
 
 const rule: RuleWithoutFunction = {
   name: 'require-where-delete-many',
@@ -15,38 +15,61 @@ const rule: RuleWithoutFunction = {
 
 describe('requireWhereDeleteMany', () => {
   it.each([
-    { name: 'no arguments', args: [], expected: true },
-    { name: 'an undefined argument', args: [undefined], expected: true },
-    { name: 'a null argument', args: [null], expected: true },
-    { name: 'a non-object argument', args: [42], expected: true },
-    { name: 'an empty options object', args: [{}], expected: true },
-    { name: 'data without where', args: [{ data: { active: true } }], expected: true },
-    { name: 'an undefined where', args: [{ where: undefined }], expected: true },
-    { name: 'an empty where', args: [{ where: {} }], expected: true },
-    { name: 'an id filter', args: [{ where: { id: 1 } }], expected: false },
-    { name: 'a nested filter', args: [{ where: { id: { in: [1, 2] } } }], expected: false },
+    { name: 'no arguments', argument: '', highlight: 'prisma.user.deleteMany()' },
+    { name: 'an undefined argument', argument: 'undefined', highlight: 'undefined' },
+    { name: 'a null argument', argument: 'null', highlight: 'null' },
+    { name: 'a non-object argument', argument: '42', highlight: '42' },
+    { name: 'an empty options object', argument: '{}', highlight: '{}' },
+    {
+      name: 'data without where',
+      argument: '{ data: { active: true } }',
+      highlight: '{ data: { active: true } }',
+    },
+    { name: 'an undefined where', argument: '{ where: undefined }', highlight: 'undefined' },
+    { name: 'an empty where', argument: '{ where: {} }', highlight: '{}' },
+  ])('reports deleteMany with $name', ({ argument, highlight }) => {
+    const expression = createExpression('deleteMany', 'User', argument);
+    const result = requireWhereDeleteMany(expression, rule);
+
+    expect(result.isTriggered).toBe(true);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe(highlight);
+    }
+  });
+
+  it.each([
+    { name: 'an id filter', argument: '{ where: { id: 1 } }' },
+    { name: 'a nested filter', argument: '{ where: { id: { in: [1, 2] } } }' },
     // Invalid where values are already rejected by Prisma's types.
-    { name: 'a null where', args: [{ where: null }], expected: false },
-    { name: 'a non-object where', args: [{ where: 42 }], expected: false },
-  ])('returns violation=$expected for deleteMany with $name', ({ args, expected }) => {
-    expect(requireWhereDeleteMany({ method: 'deleteMany', args: wrapArguments(args) }, rule)).toBe(
-      expected,
-    );
+    { name: 'a null where', argument: '{ where: null }' },
+    { name: 'a non-object where', argument: '{ where: 42 }' },
+  ])('does not warn for deleteMany with $name', ({ argument }) => {
+    const expression = createExpression('deleteMany', 'User', argument);
+    const result = requireWhereDeleteMany(expression, rule);
+
+    expect(result.isTriggered).toBe(false);
   });
 
   it('ignores methods outside the rule even without where', () => {
-    expect(requireWhereDeleteMany({ method: 'findMany', args: wrapArguments([{}]) }, rule)).toBe(
-      false,
-    );
+    const expression = createExpression('findMany', 'User', '{}');
+    const result = requireWhereDeleteMany(expression, rule);
+
+    expect(result.isTriggered).toBe(false);
   });
 
-  it('reports only methods in the custom rule configuration', () => {
+  it.each([
+    { method: 'customMethod', expected: true },
+    { method: 'deleteMany', expected: false },
+  ])('returns isTriggered=$expected for the custom method $method', ({ method, expected }) => {
     const customRule = { ...rule, methods: ['customMethod'] };
-    expect(
-      requireWhereDeleteMany({ method: 'customMethod', args: wrapArguments([{}]) }, customRule),
-    ).toBe(true);
-    expect(
-      requireWhereDeleteMany({ method: 'deleteMany', args: wrapArguments([{}]) }, customRule),
-    ).toBe(false);
+    const expression = createExpression(method, 'User', '{}');
+    const result = requireWhereDeleteMany(expression, customRule);
+
+    expect(result.isTriggered).toBe(expected);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('{}');
+    }
   });
 });
