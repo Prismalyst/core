@@ -1,5 +1,9 @@
 import type { PrismaExpression } from '../../types/prisma.types.js';
-import type { RuleOptions, RuleWithoutFunction } from '../../types/rule.eslint.types.js';
+import type {
+  RuleOptions,
+  RuleReturnType,
+  RuleWithoutFunction,
+} from '../../types/rule.eslint.types.js';
 
 import { isExpressionInAllowedFunction } from '../utils/is-expression-in-allowed-function.js';
 import { isExpressionInIgnoredFiles } from '../utils/is-expression-in-ignored-files.js';
@@ -14,10 +18,10 @@ export type NoPrismaClientInFunctionOptions = {
 };
 
 export function noPrismaClientInFunction(
-  expression: Pick<PrismaExpression, 'filename' | 'expressionContext'>,
+  expression: Pick<PrismaExpression, 'node' | 'filename' | 'expressionContext'>,
   _rule: RuleWithoutFunction,
   options: RuleOptions<NoPrismaClientInFunctionOptions>,
-): boolean {
+): RuleReturnType {
   // We can guarantee that incoming expression is a prisma-generated class
   // So we don't need to check it directly with "rule.methods.includes(expression.method)"
 
@@ -36,11 +40,11 @@ export function noPrismaClientInFunction(
   );
   const isInTestFile = isExpressionInTestFile(filename);
 
-  if (!isInsideFunctionLike) return false;
-  if (isInsideConstructor) return false;
-  if (isInIgnoredFile) return false;
-  if (isInAllowedFunction) return false;
-  if (allowInTests && isInTestFile) return false;
+  if (!isInsideFunctionLike) return { isTriggered: false };
+  if (isInsideConstructor) return { isTriggered: false };
+  if (isInIgnoredFile) return { isTriggered: false };
+  if (isInAllowedFunction) return { isTriggered: false };
+  if (allowInTests && isInTestFile) return { isTriggered: false };
 
-  return true;
+  return { isTriggered: true, nodeToHighlight: expression.node };
 }
