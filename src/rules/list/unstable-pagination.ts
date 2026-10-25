@@ -86,7 +86,7 @@ export function unstablePagination(
 
   if (hasUniqueOrder) return { isTriggered: false };
 
-  const nodeToHighlight = orderBy.node.parent ?? orderBy.node;
+  const nodeToHighlight = orderBy.node.parent;
 
   return { isTriggered: true, nodeToHighlight };
 }
