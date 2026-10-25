@@ -4,6 +4,8 @@ import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
 import { noRootClientInTransaction } from '../../../rules/list/no-root-client-in-transaction.js';
 
+import { createExpression } from '../../helpers/create-expression.js';
+
 const rule: RuleWithoutFunction = {
   name: 'no-root-client-in-transaction',
   astType: 'callExpression',
@@ -11,12 +13,6 @@ const rule: RuleWithoutFunction = {
   requireSchema: false,
 };
 
-const prismaContext = {
-  isFloatingPrismaPromise: false,
-  isExpressionInsideTransaction: false,
-  transactionType: null,
-  clientType: 'prisma',
-} as const;
 describe('noRootClientInTransaction', () => {
   it.each([
     { inside: true, transactionType: 'interactive', clientType: 'prisma', expected: true },
@@ -26,53 +22,48 @@ describe('noRootClientInTransaction', () => {
     { inside: true, transactionType: 'sequential', clientType: 'prisma', expected: false },
     { inside: true, transactionType: null, clientType: 'prisma', expected: false },
   ] as const)(
-    'returns violation=$expected for inside=$inside, type=$transactionType, client=$clientType',
+    'returns isTriggered=$expected for inside=$inside, type=$transactionType, client=$clientType',
     ({ inside, transactionType, clientType, expected }) => {
-      expect(
-        noRootClientInTransaction(
-          {
-            method: 'findMany',
-            prismaContext: {
-              ...prismaContext,
-              isExpressionInsideTransaction: inside,
-              transactionType,
-              clientType,
-            },
-          },
-          rule,
-        ),
-      ).toBe(expected);
+      const expression = createExpression('findMany', 'User', '');
+      expression.prismaContext.isExpressionInsideTransaction = inside;
+      expression.prismaContext.transactionType = transactionType;
+      expression.prismaContext.clientType = clientType;
+
+      const result = noRootClientInTransaction(expression, rule);
+
+      expect(result.isTriggered).toBe(expected);
+
+      if (result.isTriggered) {
+        expect(result.nodeToHighlight.getText()).toBe('prisma.user.findMany()');
+      }
     },
   );
 
   it('ignores methods outside the rule inside an interactive transaction', () => {
-    expect(
-      noRootClientInTransaction(
-        {
-          method: 'raw',
-          prismaContext: {
-            ...prismaContext,
-            isExpressionInsideTransaction: true,
-            transactionType: 'interactive',
-          },
-        },
-        rule,
-      ),
-    ).toBe(false);
+    const expression = createExpression('findFirst', 'User', '');
+    expression.prismaContext.isExpressionInsideTransaction = true;
+    expression.prismaContext.transactionType = 'interactive';
+
+    const result = noRootClientInTransaction(expression, rule);
+
+    expect(result.isTriggered).toBe(false);
   });
 
-  it('reports only methods in the custom rule configuration', () => {
+  it.each([
+    { method: 'count', expected: true },
+    { method: 'findMany', expected: false },
+  ])('returns isTriggered=$expected for the custom method $method', ({ method, expected }) => {
     const customRule = { ...rule, methods: ['count'] };
-    const context = {
-      ...prismaContext,
-      isExpressionInsideTransaction: true,
-      transactionType: 'interactive' as const,
-    };
-    expect(noRootClientInTransaction({ method: 'count', prismaContext: context }, customRule)).toBe(
-      true,
-    );
-    expect(
-      noRootClientInTransaction({ method: 'findMany', prismaContext: context }, customRule),
-    ).toBe(false);
+    const expression = createExpression(method, 'User', '');
+    expression.prismaContext.isExpressionInsideTransaction = true;
+    expression.prismaContext.transactionType = 'interactive';
+
+    const result = noRootClientInTransaction(expression, customRule);
+
+    expect(result.isTriggered).toBe(expected);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('prisma.user.count()');
+    }
   });
 });
