@@ -1,13 +1,16 @@
 import type { PrismaExpression } from '../../types/prisma.types.js';
-import type { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
+import type { RuleReturnType, RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
 export function noQueryInLoop(
-  expression: Pick<PrismaExpression, 'method' | 'expressionContext'>,
+  expression: Pick<PrismaExpression, 'node' | 'method' | 'expressionContext'>,
   rule: RuleWithoutFunction,
-): boolean {
+): RuleReturnType {
   const isRuleMethod = rule.methods.includes(expression.method);
 
-  if (!isRuleMethod) return false;
+  if (!isRuleMethod) return { isTriggered: false };
 
-  return expression.expressionContext.isExpressionInsideLoop;
+  if (expression.expressionContext.isExpressionInsideLoop)
+    return { isTriggered: true, nodeToHighlight: expression.node };
+
+  return { isTriggered: false };
 }
