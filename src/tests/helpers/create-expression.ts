@@ -15,11 +15,11 @@ export function createExpression(
   model: string | null,
   argument: string,
 ): Pick<PrismaExpression, 'node' | 'method' | 'args' | 'expressionContext' | 'prismaContext'> {
-  const delegate = model ? model.charAt(0).toLowerCase() + model.slice(1) : 'user';
+  const delegate = model ? `.${model.charAt(0).toLowerCase()}${model.slice(1)}` : '';
 
   const sourceFile = TS.createSourceFile(
     'query.ts',
-    `prisma.${delegate}.${method}(${argument});`,
+    `prisma${delegate}.${method}(${argument});`,
     TS.ScriptTarget.Latest,
     true,
   );
