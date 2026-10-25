@@ -4,6 +4,8 @@ import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
 import { noQueryInLoop } from '../../../rules/list/no-query-in-loop.js';
 
+import { createExpression } from '../../helpers/create-expression.js';
+
 const rule: RuleWithoutFunction = {
   name: 'no-query-in-loop',
   astType: 'callExpression',
@@ -11,48 +13,46 @@ const rule: RuleWithoutFunction = {
   requireSchema: false,
 };
 
-const expressionContext = {
-  isExpressionInsideLoop: false,
-  isExpressionInsideFunction: false,
-  isExpressionInsideClassMethod: false,
-  isExpressionInsideAwaitExpression: false,
-  parentFunctionName: null,
-  parentMethodName: null,
-};
 describe('noQueryInLoop', () => {
   it.each([true, false])(
-    'uses isExpressionInsideLoop=%s as the violation result',
+    'returns isTriggered=%s based on the loop context',
     (isExpressionInsideLoop) => {
-      expect(
-        noQueryInLoop(
-          {
-            method: 'findMany',
-            expressionContext: { ...expressionContext, isExpressionInsideLoop },
-          },
-          rule,
-        ),
-      ).toBe(isExpressionInsideLoop);
+      const expression = createExpression('findMany', 'User', '');
+      expression.expressionContext.isExpressionInsideLoop = isExpressionInsideLoop;
+
+      const result = noQueryInLoop(expression, rule);
+
+      expect(result.isTriggered).toBe(isExpressionInsideLoop);
+
+      if (result.isTriggered) {
+        expect(result.nodeToHighlight.getText()).toBe('prisma.user.findMany()');
+      }
     },
   );
 
   it('ignores methods outside the rule even inside a loop', () => {
-    expect(
-      noQueryInLoop(
-        {
-          method: 'otherMethod',
-          expressionContext: { ...expressionContext, isExpressionInsideLoop: true },
-        },
-        rule,
-      ),
-    ).toBe(false);
+    const expression = createExpression('findFirst', 'User', '');
+    expression.expressionContext.isExpressionInsideLoop = true;
+
+    const result = noQueryInLoop(expression, rule);
+
+    expect(result.isTriggered).toBe(false);
   });
 
-  it('reports only methods in the custom rule configuration', () => {
+  it.each([
+    { method: 'count', expected: true },
+    { method: 'findMany', expected: false },
+  ])('returns isTriggered=$expected for the custom method $method', ({ method, expected }) => {
     const customRule = { ...rule, methods: ['count'] };
-    const context = { ...expressionContext, isExpressionInsideLoop: true };
-    expect(noQueryInLoop({ method: 'count', expressionContext: context }, customRule)).toBe(true);
-    expect(noQueryInLoop({ method: 'findMany', expressionContext: context }, customRule)).toBe(
-      false,
-    );
+    const expression = createExpression(method, 'User', '');
+    expression.expressionContext.isExpressionInsideLoop = true;
+
+    const result = noQueryInLoop(expression, customRule);
+
+    expect(result.isTriggered).toBe(expected);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('prisma.user.count()');
+    }
   });
 });
