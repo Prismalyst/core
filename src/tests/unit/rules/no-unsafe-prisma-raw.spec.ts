@@ -4,7 +4,7 @@ import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
 import { noUnsafePrismaRaw } from '../../../rules/list/no-unsafe-prisma-raw.js';
 
-import { wrapArguments } from '../../helpers/wrap-arguments.js';
+import { createExpression } from '../../helpers/create-expression.js';
 
 const rule: RuleWithoutFunction = {
   name: 'no-unsafe-prisma-raw',
@@ -14,28 +14,57 @@ const rule: RuleWithoutFunction = {
 };
 
 describe('noUnsafePrismaRaw', () => {
-  it.each(['SELECT 1', ''])('allows the literal string %j in Prisma.raw', (value) => {
-    expect(noUnsafePrismaRaw({ method: 'raw', args: wrapArguments([value]) }, rule)).toBe(false);
-  });
+  it.each(["'SELECT 1'", "''", '`SELECT 1`'])(
+    'allows the static string %s in Prisma.raw',
+    (argument) => {
+      const expression = createExpression('raw', null, argument);
+      const result = noUnsafePrismaRaw(expression, rule);
+
+      expect(result.isTriggered).toBe(false);
+    },
+  );
 
   it('reports interpolated SQL in Prisma.raw', () => {
-    const value = { kind: 'template', raw: '`SELECT * FROM users WHERE id = ${id}`' };
-    expect(noUnsafePrismaRaw({ method: 'raw', args: wrapArguments([value]) }, rule)).toBe(true);
-  });
+    const query = '`SELECT * FROM users WHERE id = ${id}`';
 
-  it('reports an unresolved value in Prisma.raw', () => {
-    const value = {};
-    expect(noUnsafePrismaRaw({ method: 'raw', args: wrapArguments([value]) }, rule)).toBe(true);
+    const expression = createExpression('raw', null, query);
+    const result = noUnsafePrismaRaw(expression, rule);
+
+    expect(result.isTriggered).toBe(true);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe(query);
+    }
   });
 
   it.each([
-    { name: 'no arguments', args: [] },
-    { name: 'an undefined argument', args: [undefined] },
-  ])('ignores Prisma.raw calls with $name', ({ args }) => {
-    expect(noUnsafePrismaRaw({ method: 'raw', args: wrapArguments(args) }, rule)).toBe(false);
+    { name: 'an unresolved value', argument: 'query' },
+    { name: 'a non-string object', argument: '{}' },
+  ])('reports $name in Prisma.raw', ({ argument }) => {
+    const expression = createExpression('raw', null, argument);
+    const result = noUnsafePrismaRaw(expression, rule);
+
+    expect(result.isTriggered).toBe(true);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe(argument);
+    }
+  });
+
+  it.each([
+    { name: 'no arguments', argument: '' },
+    { name: 'an undefined argument', argument: 'undefined' },
+  ])('ignores Prisma.raw calls with $name', ({ argument }) => {
+    const expression = createExpression('raw', null, argument);
+    const result = noUnsafePrismaRaw(expression, rule);
+
+    expect(result.isTriggered).toBe(false);
   });
 
   it('ignores methods outside the rule', () => {
-    expect(noUnsafePrismaRaw({ method: 'findMany', args: wrapArguments([{}]) }, rule)).toBe(false);
+    const expression = createExpression('findMany', 'User', '{}');
+    const result = noUnsafePrismaRaw(expression, rule);
+
+    expect(result.isTriggered).toBe(false);
   });
 });
