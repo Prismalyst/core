@@ -168,7 +168,7 @@ export function createNodeUtils(ts: typeof TS, checker: TS.TypeChecker) {
 
         const parsed = parseValue(property.initializer, checker);
 
-        fields.set(name, { ...parsed, node: property.name });
+        fields.set(name, { value: parsed.value, valueNode: parsed.node, node: property.name });
         continue;
       }
 

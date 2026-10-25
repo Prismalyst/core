@@ -7,6 +7,7 @@ export type AstObject = {
 export type ParsedValue<T = AstValue> = {
   value: T;
   node: TS.Node;
+  valueNode?: TS.Node;
 };
 
 export type AstValue =
