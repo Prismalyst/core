@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import type { DMMFType, RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
 import { unstablePagination } from '../../../rules/list/unstable-pagination.js';
 
 import { createExpression } from '../../helpers/create-expression.js';
-import { createDmmf } from '../../helpers/dmmf/create-dmmf.js';
 import { createField } from '../../helpers/dmmf/create-field.js';
+import { createModel } from '../../helpers/dmmf/create-model.js';
+import { createSchema } from '../../helpers/dmmf/create-schema.js';
 
 const rule: RuleWithoutFunction = {
   name: 'unstable-pagination',
@@ -15,47 +16,32 @@ const rule: RuleWithoutFunction = {
   requireSchema: true,
 };
 
-const baseDmmf = createDmmf([]);
-const dmmf: DMMFType = {
-  ...baseDmmf,
-  datamodel: {
-    ...baseDmmf.datamodel,
-    models: [
-      {
-        name: 'User',
-        dbName: null,
-        schema: null,
-        fields: [
-          createField('id', { isId: true }),
-          createField('email', { isUnique: true }),
-          createField('optionalCode', { isUnique: true, isRequired: false }),
-          createField('createdAt'),
-          createField('tenantId'),
-          createField('externalId'),
-          createField('region'),
-          createField('slug'),
-          createField('nullableCode', { isRequired: false }),
-        ],
-        uniqueFields: [
-          ['tenantId', 'externalId'],
-          ['region', 'slug'],
-          ['tenantId', 'nullableCode'],
-        ],
-        uniqueIndexes: [],
-        primaryKey: null,
-      },
-      {
-        name: 'Membership',
-        dbName: null,
-        schema: null,
-        fields: [createField('tenantId'), createField('userId')],
-        uniqueFields: [],
-        uniqueIndexes: [],
-        primaryKey: { name: null, fields: ['tenantId', 'userId'] },
-      },
+const dmmf = createSchema([
+  {
+    ...createModel('User'),
+    fields: [
+      createField('id', { isId: true }),
+      createField('email', { isUnique: true }),
+      createField('optionalCode', { isUnique: true, isRequired: false }),
+      createField('createdAt'),
+      createField('tenantId'),
+      createField('externalId'),
+      createField('region'),
+      createField('slug'),
+      createField('nullableCode', { isRequired: false }),
+    ],
+    uniqueFields: [
+      ['tenantId', 'externalId'],
+      ['region', 'slug'],
+      ['tenantId', 'nullableCode'],
     ],
   },
-};
+  {
+    ...createModel('Membership'),
+    fields: [createField('tenantId'), createField('userId')],
+    primaryKey: { name: null, fields: ['tenantId', 'userId'] },
+  },
+]);
 
 describe('unstablePagination', () => {
   it.each([
