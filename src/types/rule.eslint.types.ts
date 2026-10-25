@@ -9,10 +9,12 @@ export type RuleOptions<T> = Readonly<T>;
 
 export type DMMFType = Document;
 
-export type RuleReturnType = {
-  isTriggered: boolean;
-  nodeToHighlight?: TS.Node;
-};
+export type RuleReturnType =
+  | { isTriggered: false }
+  | {
+      isTriggered: true;
+      nodeToHighlight: TS.Node;
+    };
 
 export type Rule<TOptions = Record<PropertyKey, never>> = {
   name: string;
