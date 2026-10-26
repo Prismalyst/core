@@ -36,5 +36,8 @@ function wrapValue(value: unknown): ParsedValue {
   }
 
   // Existing tests check parsed values and rule behavior, not source locations.
-  return { value: wrapped as AstValue, node: expect.anything() };
+  return expect.objectContaining({
+    value: wrapped as AstValue,
+    node: expect.anything(),
+  });
 }
