@@ -1,20 +1,27 @@
 import { PrismaExpression } from '../../types/prisma.types.js';
-import { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
+import { RuleReturnType, RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
-// Works just with CallExpressions (Prisma.sql(`...`), not Prisma.sql`...`)
+// Works just with CallExpressions:
+// Prisma.raw(`SELECT id FROM "User" WHERE id = ${id};`);
 export function noUnsafePrismaRaw(
   expression: Pick<PrismaExpression, 'method' | 'args'>,
   rule: RuleWithoutFunction,
-) {
+): RuleReturnType {
   const isRuleMethod = rule.methods.includes(expression.method);
 
-  if (!isRuleMethod) return false;
+  if (!isRuleMethod) return { isTriggered: false };
 
-  const firstArg = expression.args[0]?.value;
+  const firstArg = expression.args[0];
 
-  if (firstArg === undefined) return false;
+  if (firstArg?.value === undefined) return { isTriggered: false };
 
-  if (typeof firstArg === 'string') return false;
+  const firstArgNode = firstArg.node;
+  const firstArgValue = firstArg.value;
 
-  return true;
+  if (typeof firstArgValue === 'string') return { isTriggered: false };
+
+  return {
+    isTriggered: true,
+    nodeToHighlight: firstArgNode,
+  };
 }

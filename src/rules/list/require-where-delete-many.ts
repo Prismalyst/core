@@ -1,5 +1,5 @@
 import { PrismaExpression } from '../../types/prisma.types.js';
-import { RuleWithoutFunction } from '../../types/rule.eslint.types.js';
+import { RuleReturnType, RuleWithoutFunction } from '../../types/rule.eslint.types.js';
 
 import { isObjectEmpty } from '../utils/is-object-empty.js';
 import { isObject } from '../utils/is-object.js';
@@ -7,33 +7,32 @@ import { isObject } from '../utils/is-object.js';
 import { getProperty } from '../../ast/utils/get-property.js';
 
 export function requireWhereDeleteMany(
-  expression: Pick<PrismaExpression, 'method' | 'args'>,
+  expression: Pick<PrismaExpression, 'node' | 'method' | 'args'>,
   rule: RuleWithoutFunction,
-) {
+): RuleReturnType {
   const isRuleMethod = rule.methods.includes(expression.method);
 
-  if (!isRuleMethod) return false;
+  if (!isRuleMethod) return { isTriggered: false };
 
-  const firstArg = expression.args[0]?.value;
+  const firstArg = expression.args[0];
 
   // Disallow prisma.user.deleteMany()
-  if (firstArg === undefined) return true;
+  if (firstArg === undefined) return { isTriggered: true, nodeToHighlight: expression.node };
 
-  const isFirstArgIsObject = isObject(firstArg);
+  const whereArg = getProperty(firstArg, ['where']);
 
-  if (!isFirstArgIsObject) return true;
+  // Disallow prisma.user.deleteMany({})
+  if (whereArg === undefined) return { isTriggered: true, nodeToHighlight: firstArg.node };
 
-  const whereArg = getProperty(expression.args[0], ['where'])?.value;
+  const whereArgValue = whereArg.value;
 
   // Disallow explicit undefined
-  if (whereArg === undefined) return true;
+  if (whereArgValue === undefined)
+    return { isTriggered: true, nodeToHighlight: whereArg.valueNode ?? whereArg.node };
 
-  const isWhereArgIsObject = isObject(whereArg);
+  // Disallow prisma.user.deleteMany({ where: {} })
+  if (isObject(whereArgValue) && isObjectEmpty(whereArgValue))
+    return { isTriggered: true, nodeToHighlight: whereArg.valueNode ?? whereArg.node };
 
-  // Prisma already highlights this as an error
-  if (!isWhereArgIsObject) return false;
-
-  if (isObjectEmpty(whereArg)) return true;
-
-  return false;
+  return { isTriggered: false };
 }

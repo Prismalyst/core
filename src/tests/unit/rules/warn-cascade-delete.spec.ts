@@ -24,50 +24,49 @@ const dmmf = createSchema([userModel, postModel]);
 const deleteArgument = '{ where: { id: 1 } }';
 
 describe('warnCascadeDelete', () => {
-  it.each(rule.methods)('reports an incoming cascade for %s', (method) => {
-    expect(
-      warnCascadeDelete(createExpression(method, 'User', deleteArgument), rule, {}, dmmf)
-        .isTriggered,
-    ).toBe(true);
+  it.each(['delete', 'deleteMany'])('reports an incoming cascade for %s', (method) => {
+    const expression = createExpression(method, 'User', deleteArgument);
+    const result = warnCascadeDelete(expression, rule, {}, dmmf);
+
+    expect(result.isTriggered).toBe(true);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe(`prisma.user.${method}`);
+    }
   });
 
   it.each(['findMany', 'create', 'update', 'updateMany', 'upsert', 'count'])(
     'ignores the unsupported method %s even when cascade relations exist',
     (method) => {
-      expect(
-        warnCascadeDelete(createExpression(method, 'User', deleteArgument), rule, {}, dmmf),
-      ).toEqual({
-        isTriggered: false,
-      });
+      const expression = createExpression(method, 'User', deleteArgument);
+      const result = warnCascadeDelete(expression, rule, {}, dmmf);
+
+      expect(result.isTriggered).toBe(false);
     },
   );
 
-  it('uses the configured methods', () => {
+  it.each([
+    { method: 'delete', expected: false },
+    { method: 'deleteMany', expected: true },
+  ])('returns isTriggered=$expected for the custom method $method', ({ method, expected }) => {
     const customRule = { ...rule, methods: ['deleteMany'] };
+    const expression = createExpression(method, 'User', deleteArgument);
+    const result = warnCascadeDelete(expression, customRule, {}, dmmf);
 
-    expect(
-      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), customRule, {}, dmmf),
-    ).toEqual({
-      isTriggered: false,
-    });
-    expect(
-      warnCascadeDelete(
-        createExpression('deleteMany', 'User', deleteArgument),
-        customRule,
-        {},
-        dmmf,
-      ).isTriggered,
-    ).toBe(true);
+    expect(result.isTriggered).toBe(expected);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('prisma.user.deleteMany');
+    }
   });
 
   it.each([null, 'MissingModel', 'user'])(
     'ignores a query without schema metadata for model %s',
     (model) => {
-      expect(
-        warnCascadeDelete(createExpression('delete', model, deleteArgument), rule, {}, dmmf),
-      ).toEqual({
-        isTriggered: false,
-      });
+      const expression = createExpression('delete', model, deleteArgument);
+      const result = warnCascadeDelete(expression, rule, {}, dmmf);
+
+      expect(result.isTriggered).toBe(false);
     },
   );
 
@@ -75,37 +74,26 @@ describe('warnCascadeDelete', () => {
     { name: 'an empty schema', models: [] },
     { name: 'a schema missing the referenced model', models: [postModel] },
   ])('ignores $name', ({ models }) => {
-    expect(
-      warnCascadeDelete(
-        createExpression('delete', 'User', deleteArgument),
-        rule,
-        {},
-        createSchema(models),
-      ),
-    ).toEqual({
-      isTriggered: false,
-    });
+    const schema = createSchema(models);
+    const expression = createExpression('delete', 'User', deleteArgument);
+    const result = warnCascadeDelete(expression, rule, {}, schema);
+
+    expect(result.isTriggered).toBe(false);
   });
 
   it('allows deleting a model without dependent relations', () => {
-    expect(
-      warnCascadeDelete(
-        createExpression('delete', 'User', deleteArgument),
-        rule,
-        {},
-        createSchema([userModel]),
-      ),
-    ).toEqual({
-      isTriggered: false,
-    });
+    const schema = createSchema([userModel]);
+    const expression = createExpression('delete', 'User', deleteArgument);
+    const result = warnCascadeDelete(expression, rule, {}, schema);
+
+    expect(result.isTriggered).toBe(false);
   });
 
   it('does not treat deleting a child as deleting its parent', () => {
-    expect(
-      warnCascadeDelete(createExpression('delete', 'Post', deleteArgument), rule, {}, dmmf),
-    ).toEqual({
-      isTriggered: false,
-    });
+    const expression = createExpression('delete', 'Post', deleteArgument);
+    const result = warnCascadeDelete(expression, rule, {}, dmmf);
+
+    expect(result.isTriggered).toBe(false);
   });
 
   it.each([
@@ -121,11 +109,10 @@ describe('warnCascadeDelete', () => {
       createModel('Post', [createRelation('author', 'User', options)]),
     ]);
 
-    expect(
-      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema),
-    ).toEqual({
-      isTriggered: false,
-    });
+    const expression = createExpression('delete', 'User', deleteArgument);
+    const result = warnCascadeDelete(expression, rule, {}, schema);
+
+    expect(result.isTriggered).toBe(false);
   });
 
   it('ignores a cascade between unrelated models', () => {
@@ -135,11 +122,10 @@ describe('warnCascadeDelete', () => {
       createModel('Post', [createRelation('project', 'Project', { relationOnDelete: 'Cascade' })]),
     ]);
 
-    expect(
-      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema),
-    ).toEqual({
-      isTriggered: false,
-    });
+    const expression = createExpression('delete', 'User', deleteArgument);
+    const result = warnCascadeDelete(expression, rule, {}, schema);
+
+    expect(result.isTriggered).toBe(false);
   });
 
   it('finds a cascade after unrelated models and relations', () => {
@@ -153,10 +139,14 @@ describe('warnCascadeDelete', () => {
       ]),
     ]);
 
-    expect(
-      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema)
-        .isTriggered,
-    ).toBe(true);
+    const expression = createExpression('delete', 'User', deleteArgument);
+    const result = warnCascadeDelete(expression, rule, {}, schema);
+
+    expect(result.isTriggered).toBe(true);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('prisma.user.delete');
+    }
   });
 
   it('reports a cascade through an optional relation', () => {
@@ -167,34 +157,43 @@ describe('warnCascadeDelete', () => {
       ]),
     ]);
 
-    expect(
-      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema)
-        .isTriggered,
-    ).toBe(true);
+    const expression = createExpression('delete', 'User', deleteArgument);
+    const result = warnCascadeDelete(expression, rule, {}, schema);
+
+    expect(result.isTriggered).toBe(true);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('prisma.user.delete');
+    }
   });
 
-  it('reports a one-to-one cascade only when deleting the referenced model', () => {
-    const schema = createSchema([
-      createModel('User', [
-        createRelation('profile', 'Profile', {
-          isRequired: false,
-          relationFromFields: [],
-          relationToFields: [],
-        }),
-      ]),
-      createModel('Profile', [createRelation('user', 'User', { relationOnDelete: 'Cascade' })]),
-    ]);
+  it.each([
+    { model: 'User', expected: true },
+    { model: 'Profile', expected: false },
+  ])(
+    'returns isTriggered=$expected for deleting $model in a one-to-one relation',
+    ({ model, expected }) => {
+      const schema = createSchema([
+        createModel('User', [
+          createRelation('profile', 'Profile', {
+            isRequired: false,
+            relationFromFields: [],
+            relationToFields: [],
+          }),
+        ]),
+        createModel('Profile', [createRelation('user', 'User', { relationOnDelete: 'Cascade' })]),
+      ]);
 
-    expect(
-      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema)
-        .isTriggered,
-    ).toBe(true);
-    expect(
-      warnCascadeDelete(createExpression('delete', 'Profile', deleteArgument), rule, {}, schema),
-    ).toEqual({
-      isTriggered: false,
-    });
-  });
+      const expression = createExpression('delete', model, deleteArgument);
+      const result = warnCascadeDelete(expression, rule, {}, schema);
+
+      expect(result.isTriggered).toBe(expected);
+
+      if (result.isTriggered) {
+        expect(result.nodeToHighlight.getText()).toBe('prisma.user.delete');
+      }
+    },
+  );
 
   it('reports a cascade through a compound foreign key', () => {
     const schema = createSchema([
@@ -208,10 +207,14 @@ describe('warnCascadeDelete', () => {
       ]),
     ]);
 
-    expect(
-      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema)
-        .isTriggered,
-    ).toBe(true);
+    const expression = createExpression('delete', 'User', deleteArgument);
+    const result = warnCascadeDelete(expression, rule, {}, schema);
+
+    expect(result.isTriggered).toBe(true);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('prisma.user.delete');
+    }
   });
 
   it('reports a cascading self-relation', () => {
@@ -219,28 +222,39 @@ describe('warnCascadeDelete', () => {
       createModel('User', [createRelation('manager', 'User', { relationOnDelete: 'Cascade' })]),
     ]);
 
-    expect(
-      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema)
-        .isTriggered,
-    ).toBe(true);
+    const expression = createExpression('delete', 'User', deleteArgument);
+    const result = warnCascadeDelete(expression, rule, {}, schema);
+
+    expect(result.isTriggered).toBe(true);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('prisma.user.delete');
+    }
   });
 
   it.each([
-    { model: 'User', expected: true },
-    { model: 'Post', expected: true },
+    { model: 'User', expected: true, highlight: 'prisma.user.delete' },
+    { model: 'Post', expected: true, highlight: 'prisma.post.delete' },
     { model: 'Comment', expected: false },
-  ])('returns violation=$expected for $model in a cascade chain', ({ model, expected }) => {
-    const schema = createSchema([
-      userModel,
-      postModel,
-      createModel('Comment', [createRelation('post', 'Post', { relationOnDelete: 'Cascade' })]),
-    ]);
+  ])(
+    'returns isTriggered=$expected for $model in a cascade chain',
+    ({ model, expected, highlight }) => {
+      const schema = createSchema([
+        userModel,
+        postModel,
+        createModel('Comment', [createRelation('post', 'Post', { relationOnDelete: 'Cascade' })]),
+      ]);
 
-    expect(
-      warnCascadeDelete(createExpression('delete', model, deleteArgument), rule, {}, schema)
-        .isTriggered,
-    ).toBe(expected);
-  });
+      const expression = createExpression('delete', model, deleteArgument);
+      const result = warnCascadeDelete(expression, rule, {}, schema);
+
+      expect(result.isTriggered).toBe(expected);
+
+      if (result.isTriggered) {
+        expect(result.nodeToHighlight.getText()).toBe(highlight);
+      }
+    },
+  );
 
   it('does not follow a cascade beyond a non-cascading relation', () => {
     const schema = createSchema([
@@ -249,29 +263,23 @@ describe('warnCascadeDelete', () => {
       createModel('Comment', [createRelation('post', 'Post', { relationOnDelete: 'Cascade' })]),
     ]);
 
-    expect(
-      warnCascadeDelete(createExpression('delete', 'User', deleteArgument), rule, {}, schema),
-    ).toEqual({
-      isTriggered: false,
-    });
+    const expression = createExpression('delete', 'User', deleteArgument);
+    const result = warnCascadeDelete(expression, rule, {}, schema);
+
+    expect(result.isTriggered).toBe(false);
   });
 
   it.each(['', 'options', '{ where: { id: 1 } }'])(
     'reports a cascade regardless of the query argument: %j',
     (argument) => {
-      expect(
-        warnCascadeDelete(createExpression('deleteMany', 'User', argument), rule, {}, dmmf)
-          .isTriggered,
-      ).toBe(true);
+      const expression = createExpression('deleteMany', 'User', argument);
+      const result = warnCascadeDelete(expression, rule, {}, dmmf);
+
+      expect(result.isTriggered).toBe(true);
+
+      if (result.isTriggered) {
+        expect(result.nodeToHighlight.getText()).toBe('prisma.user.deleteMany');
+      }
     },
   );
-
-  it.each(rule.methods)('highlights the method expression for %s', (method) => {
-    const expression = createExpression(method, 'User', deleteArgument);
-    const result = warnCascadeDelete(expression, rule, {}, dmmf);
-
-    expect(result.isTriggered).toBe(true);
-    expect(result.nodeToHighlight).toBe(expression.node.expression);
-    expect(result.nodeToHighlight?.getText()).toBe(`prisma.user.${method}`);
-  });
 });

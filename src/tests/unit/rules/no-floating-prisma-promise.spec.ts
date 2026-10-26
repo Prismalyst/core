@@ -4,6 +4,8 @@ import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
 import { noFloatingPrismaPromise } from '../../../rules/list/no-floating-prisma-promise.js';
 
+import { createExpression } from '../../helpers/create-expression.js';
+
 const rule: RuleWithoutFunction = {
   name: 'no-floating-prisma-promise',
   astType: 'callExpression',
@@ -11,20 +13,6 @@ const rule: RuleWithoutFunction = {
   requireSchema: false,
 };
 
-const expressionContext = {
-  isExpressionInsideLoop: false,
-  isExpressionInsideFunction: false,
-  isExpressionInsideClassMethod: false,
-  isExpressionInsideAwaitExpression: false,
-  parentFunctionName: null,
-  parentMethodName: null,
-};
-const prismaContext = {
-  isFloatingPrismaPromise: false,
-  isExpressionInsideTransaction: false,
-  transactionType: null,
-  clientType: 'prisma',
-} as const;
 describe('noFloatingPrismaPromise', () => {
   it.each([
     { floating: true, awaited: false, expected: true },
@@ -32,48 +20,45 @@ describe('noFloatingPrismaPromise', () => {
     { floating: false, awaited: false, expected: false },
     { floating: false, awaited: true, expected: false },
   ])(
-    'returns violation=$expected for floating=$floating and awaited=$awaited',
+    'returns isTriggered=$expected for floating=$floating and awaited=$awaited',
     ({ floating, awaited, expected }) => {
-      expect(
-        noFloatingPrismaPromise(
-          {
-            method: 'findMany',
-            prismaContext: { ...prismaContext, isFloatingPrismaPromise: floating },
-            expressionContext: { ...expressionContext, isExpressionInsideAwaitExpression: awaited },
-          },
-          rule,
-        ),
-      ).toBe(expected);
+      const expression = createExpression('findMany', 'User', '');
+      expression.prismaContext.isFloatingPrismaPromise = floating;
+      expression.expressionContext.isExpressionInsideAwaitExpression = awaited;
+
+      const result = noFloatingPrismaPromise(expression, rule);
+
+      expect(result.isTriggered).toBe(expected);
+
+      if (result.isTriggered) {
+        expect(result.nodeToHighlight.getText()).toBe('prisma.user.findMany()');
+      }
     },
   );
 
   it('ignores floating calls outside the configured methods', () => {
-    expect(
-      noFloatingPrismaPromise(
-        {
-          method: 'otherMethod',
-          prismaContext: { ...prismaContext, isFloatingPrismaPromise: true },
-          expressionContext,
-        },
-        rule,
-      ),
-    ).toBe(false);
+    const expression = createExpression('findFirst', 'User', '');
+    expression.prismaContext.isFloatingPrismaPromise = true;
+
+    const result = noFloatingPrismaPromise(expression, rule);
+
+    expect(result.isTriggered).toBe(false);
   });
 
-  it('reports only methods in the custom rule configuration', () => {
+  it.each([
+    { method: 'count', expected: true },
+    { method: 'findMany', expected: false },
+  ])('returns isTriggered=$expected for the custom method $method', ({ method, expected }) => {
     const customRule = { ...rule, methods: ['count'] };
-    const context = { ...prismaContext, isFloatingPrismaPromise: true };
-    expect(
-      noFloatingPrismaPromise(
-        { method: 'count', prismaContext: context, expressionContext },
-        customRule,
-      ),
-    ).toBe(true);
-    expect(
-      noFloatingPrismaPromise(
-        { method: 'findMany', prismaContext: context, expressionContext },
-        customRule,
-      ),
-    ).toBe(false);
+    const expression = createExpression(method, 'User', '');
+    expression.prismaContext.isFloatingPrismaPromise = true;
+
+    const result = noFloatingPrismaPromise(expression, customRule);
+
+    expect(result.isTriggered).toBe(expected);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe('prisma.user.count()');
+    }
   });
 });

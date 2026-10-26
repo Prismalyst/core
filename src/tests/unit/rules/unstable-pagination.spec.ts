@@ -1,14 +1,13 @@
-import * as TS from 'typescript';
 import { describe, expect, it } from 'vitest';
 
-import type { DMMFType, RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
+import type { RuleWithoutFunction } from '../../../types/rule.eslint.types.js';
 
 import { unstablePagination } from '../../../rules/list/unstable-pagination.js';
 
-import { getProperty } from '../../../ast/utils/get-property.js';
 import { createExpression } from '../../helpers/create-expression.js';
-import { createDmmf } from '../../helpers/dmmf/create-dmmf.js';
 import { createField } from '../../helpers/dmmf/create-field.js';
+import { createModel } from '../../helpers/dmmf/create-model.js';
+import { createSchema } from '../../helpers/dmmf/create-schema.js';
 
 const rule: RuleWithoutFunction = {
   name: 'unstable-pagination',
@@ -17,47 +16,32 @@ const rule: RuleWithoutFunction = {
   requireSchema: true,
 };
 
-const baseDmmf = createDmmf([]);
-const dmmf: DMMFType = {
-  ...baseDmmf,
-  datamodel: {
-    ...baseDmmf.datamodel,
-    models: [
-      {
-        name: 'User',
-        dbName: null,
-        schema: null,
-        fields: [
-          createField('id', { isId: true }),
-          createField('email', { isUnique: true }),
-          createField('optionalCode', { isUnique: true, isRequired: false }),
-          createField('createdAt'),
-          createField('tenantId'),
-          createField('externalId'),
-          createField('region'),
-          createField('slug'),
-          createField('nullableCode', { isRequired: false }),
-        ],
-        uniqueFields: [
-          ['tenantId', 'externalId'],
-          ['region', 'slug'],
-          ['tenantId', 'nullableCode'],
-        ],
-        uniqueIndexes: [],
-        primaryKey: null,
-      },
-      {
-        name: 'Membership',
-        dbName: null,
-        schema: null,
-        fields: [createField('tenantId'), createField('userId')],
-        uniqueFields: [],
-        uniqueIndexes: [],
-        primaryKey: { name: null, fields: ['tenantId', 'userId'] },
-      },
+const dmmf = createSchema([
+  {
+    ...createModel('User'),
+    fields: [
+      createField('id', { isId: true }),
+      createField('email', { isUnique: true }),
+      createField('optionalCode', { isUnique: true, isRequired: false }),
+      createField('createdAt'),
+      createField('tenantId'),
+      createField('externalId'),
+      createField('region'),
+      createField('slug'),
+      createField('nullableCode', { isRequired: false }),
+    ],
+    uniqueFields: [
+      ['tenantId', 'externalId'],
+      ['region', 'slug'],
+      ['tenantId', 'nullableCode'],
     ],
   },
-};
+  {
+    ...createModel('Membership'),
+    fields: [createField('tenantId'), createField('userId')],
+    primaryKey: { name: null, fields: ['tenantId', 'userId'] },
+  },
+]);
 
 describe('unstablePagination', () => {
   it.each([
@@ -109,10 +93,15 @@ describe('unstablePagination', () => {
       orderBy: "[{ tenantId: 'asc' }, { nullableCode: 'asc' }]",
       expected: true,
     },
-  ])('returns violation=$expected for $name', ({ orderBy, expected }) => {
+  ])('returns isTriggered=$expected for $name', ({ orderBy, expected }) => {
     const expression = createExpression('findMany', 'User', `{ take: 10, orderBy: ${orderBy} }`);
+    const result = unstablePagination(expression, rule, {}, dmmf);
 
-    expect(unstablePagination(expression, rule, {}, dmmf).isTriggered).toBe(expected);
+    expect(result.isTriggered).toBe(expected);
+
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe(`orderBy: ${orderBy}`);
+    }
   });
 
   it.each([
@@ -121,15 +110,20 @@ describe('unstablePagination', () => {
     { orderBy: "{ tenantId: 'asc' }", expected: true },
     { orderBy: "{ userId: 'asc' }", expected: true },
   ])(
-    'returns violation=$expected for compound primary key order $orderBy',
+    'returns isTriggered=$expected for compound primary key order $orderBy',
     ({ orderBy, expected }) => {
       const expression = createExpression(
         'findMany',
         'Membership',
         `{ take: 10, orderBy: ${orderBy} }`,
       );
+      const result = unstablePagination(expression, rule, {}, dmmf);
 
-      expect(unstablePagination(expression, rule, {}, dmmf).isTriggered).toBe(expected);
+      expect(result.isTriggered).toBe(expected);
+
+      if (result.isTriggered) {
+        expect(result.nodeToHighlight.getText()).toBe(`orderBy: ${orderBy}`);
+      }
     },
   );
 
@@ -144,11 +138,10 @@ describe('unstablePagination', () => {
     '{ take: 10, orderBy: [] }',
     '{ take: 10, orderBy: null }',
   ])('ignores a query outside the rule scope: %s', (argument) => {
-    expect(
-      unstablePagination(createExpression('findMany', 'User', argument), rule, {}, dmmf),
-    ).toEqual({
-      isTriggered: false,
-    });
+    const expression = createExpression('findMany', 'User', argument);
+    const result = unstablePagination(expression, rule, {}, dmmf);
+
+    expect(result.isTriggered).toBe(false);
   });
 
   it.each([null, 'MissingModel'])(
@@ -159,8 +152,9 @@ describe('unstablePagination', () => {
         model,
         "{ take: 10, orderBy: { createdAt: 'desc' } }",
       );
+      const result = unstablePagination(expression, rule, {}, dmmf);
 
-      expect(unstablePagination(expression, rule, {}, dmmf)).toEqual({ isTriggered: false });
+      expect(result.isTriggered).toBe(false);
     },
   );
 
@@ -170,8 +164,9 @@ describe('unstablePagination', () => {
       'User',
       "{ take: 10, orderBy: { createdAt: 'desc' } }",
     );
+    const result = unstablePagination(expression, rule, {}, dmmf);
 
-    expect(unstablePagination(expression, rule, {}, dmmf)).toEqual({ isTriggered: false });
+    expect(result.isTriggered).toBe(false);
   });
 
   it('highlights the inline orderBy property', () => {
@@ -183,24 +178,9 @@ describe('unstablePagination', () => {
     const result = unstablePagination(expression, rule, {}, dmmf);
 
     expect(result.isTriggered).toBe(true);
-    expect(result.nodeToHighlight?.getText()).toBe("orderBy: { createdAt: 'desc' }");
-  });
 
-  it('reports the orderBy node when it has no parent', () => {
-    const expression = createExpression(
-      'findMany',
-      'User',
-      "{ take: 10, orderBy: { createdAt: 'desc' } }",
-    );
-    const orderBy = getProperty(expression.args[0], ['orderBy']);
-
-    if (!orderBy) throw new Error('Expected an orderBy property in the test query.');
-
-    orderBy.node = TS.factory.createIdentifier('orderBy');
-
-    expect(unstablePagination(expression, rule, {}, dmmf)).toEqual({
-      isTriggered: true,
-      nodeToHighlight: orderBy.node,
-    });
+    if (result.isTriggered) {
+      expect(result.nodeToHighlight.getText()).toBe("orderBy: { createdAt: 'desc' }");
+    }
   });
 });

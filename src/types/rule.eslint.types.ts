@@ -9,10 +9,12 @@ export type RuleOptions<T> = Readonly<T>;
 
 export type DMMFType = Document;
 
-export type RuleReturnType = {
-  isTriggered: boolean;
-  nodeToHighlight?: TS.Node;
-};
+export type RuleReturnType =
+  | { isTriggered: false }
+  | {
+      isTriggered: true;
+      nodeToHighlight: TS.Node;
+    };
 
 export type Rule<TOptions = Record<PropertyKey, never>> = {
   name: string;
@@ -23,10 +25,10 @@ export type Rule<TOptions = Record<PropertyKey, never>> = {
     prismaExpression: PrismaExpression,
     rule: RuleWithoutFunction,
     // TODO: make "options" optional and move "dmmf" field before options
-    // Make sure it works with @prismalyst/eslint-
+    // Make sure it works with @prismalyst/eslint-plugin
     options: RuleOptions<TOptions>,
     dmmf: DMMFType,
-  ) => RuleReturnType | boolean;
+  ) => RuleReturnType;
 };
 
 export type RuleWithoutFunction = Omit<Rule, 'function'>;

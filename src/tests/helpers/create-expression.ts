@@ -7,7 +7,7 @@ import { createNodeUtils } from '../../ast/utils/create-node-utils.js';
 
 const checker = TS.createProgram([], {}).getTypeChecker();
 
-const { parseArgument } = createNodeUtils(TS, checker);
+const { parseValue } = createNodeUtils(TS, checker);
 const { findCallExpressions } = createAstParser(TS);
 
 export function createExpression(
@@ -15,11 +15,11 @@ export function createExpression(
   model: string | null,
   argument: string,
 ): Pick<PrismaExpression, 'node' | 'method' | 'args' | 'expressionContext' | 'prismaContext'> {
-  const delegate = model ? model.charAt(0).toLowerCase() + model.slice(1) : 'user';
+  const delegate = model ? `.${model.charAt(0).toLowerCase()}${model.slice(1)}` : '';
 
   const sourceFile = TS.createSourceFile(
     'query.ts',
-    `prisma.${delegate}.${method}(${argument});`,
+    `prisma${delegate}.${method}(${argument});`,
     TS.ScriptTarget.Latest,
     true,
   );
@@ -30,12 +30,10 @@ export function createExpression(
     throw new Error('Expected a Prisma method call in the test source.');
   }
 
-  const firstArg = parseArgument(call);
-
   return {
     node: call as PrismaExpressionExpression,
     method,
-    args: firstArg ? [firstArg] : [],
+    args: call.arguments.map((arg) => parseValue(arg, checker)),
     expressionContext: {
       isExpressionInsideLoop: false,
       isExpressionInsideFunction: false,
