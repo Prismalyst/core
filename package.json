@@ -20,6 +20,9 @@
     "README.md",
     "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test:ci": "vitest run",
     "test:watch": "vitest",
