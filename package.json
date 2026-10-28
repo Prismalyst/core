@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "Core engine and shared contracts for Prismalyst static analysis tools.",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Prismalyst/core"
+  },
+  "homepage": "https://github.com/Prismalyst",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -12,7 +17,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "test:ci": "vitest run",
