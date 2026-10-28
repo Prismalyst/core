@@ -25,9 +25,8 @@ export type Rule<TOptions = Record<PropertyKey, never>> = {
     prismaExpression: PrismaExpression,
     rule: RuleWithoutFunction,
     // TODO: make "options" optional and move "dmmf" field before options
-    // Make sure it works with @prismalyst/eslint-plugin
     options: RuleOptions<TOptions>,
-    dmmf: DMMFType,
+    dmmf?: DMMFType,
   ) => RuleReturnType;
 };
 
