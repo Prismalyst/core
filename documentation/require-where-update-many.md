@@ -52,4 +52,4 @@ list.
 
 - [Implementation](../src/rules/list/require-where-update-many.ts)
 - [Unit tests](../src/tests/unit/rules/require-where-update-many.spec.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

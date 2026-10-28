@@ -43,4 +43,4 @@ dynamic `Prisma.raw` fragments.
 
 - [Implementation](../src/rules/list/no-unsafe-raw-sql.ts)
 - [Unit tests](../src/tests/unit/rules/no-unsafe-raw-sql.spec.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

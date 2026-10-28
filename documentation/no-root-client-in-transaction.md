@@ -5,7 +5,7 @@ query inside the callback may execute outside that transaction.
 
 ## Rule details
 
-- **Methods:** [All registered Prisma methods](README.md#core-behavior), except the SQL helpers `raw`,
+- **Methods:** [All registered Prisma methods](../README.md#core-behavior), except the SQL helpers `raw`,
   `sql`, `join`, and `empty`.
 - **Requires schema:** No.
 - **Options:** None.
@@ -54,4 +54,4 @@ arbitrary helper functions to prove which transaction they use.
 - [Unit tests](../src/tests/unit/rules/no-root-client-in-transaction.spec.ts)
 - [Transaction detection](../src/ast/utils/create-prisma-utils.ts)
 - [Transaction parser tests](../src/tests/ast/v7/transactions.spec.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

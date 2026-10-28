@@ -5,7 +5,7 @@ prevent the intended operation from completing or leave failures unobserved.
 
 ## Rule details
 
-- **Methods:** [All registered Prisma methods](README.md#core-behavior), when the call returns a
+- **Methods:** [All registered Prisma methods](../README.md#core-behavior), when the call returns a
   promise-like value.
 - **Requires schema:** No.
 - **Options:** None.
@@ -61,4 +61,4 @@ because they are called without `await`.
 - [Unit tests](../src/tests/unit/rules/no-floating-prisma-promise.spec.ts)
 - [Promise detection](../src/ast/utils/create-prisma-utils.ts)
 - [Expression-context tests](../src/tests/ast/v7/expression-context.spec.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

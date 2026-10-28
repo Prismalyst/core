@@ -5,7 +5,7 @@ identify filters that need a closer performance review.
 
 ## Rule details
 
-- **Methods:** [CRUD methods](README.md#core-behavior). Aggregate methods such as `count` are not in
+- **Methods:** [CRUD methods](../README.md#core-behavior). Aggregate methods such as `count` are not in
   the shipped registration.
 - **Requires schema:** Yes, including the DMMF `datamodel.indexes` metadata.
 - **Options:** None.
@@ -81,4 +81,4 @@ all filter keys are unmatched; an unknown model is not automatically exempt. The
 - [Implementation](../src/rules/list/no-unindexed-filter.ts)
 - [Unit tests](../src/tests/unit/rules/no-unindexed-filter.spec.ts)
 - [Shipped registration](../src/rules/rules-list.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

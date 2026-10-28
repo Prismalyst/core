@@ -90,4 +90,4 @@ lifetime is managed correctly.
 - [Implementation](../src/rules/list/no-prisma-client-in-function.ts)
 - [Unit tests](../src/tests/unit/rules/no-prisma-client-in-function.spec.ts)
 - [Function-name detection](../src/ast/utils/create-node-utils.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

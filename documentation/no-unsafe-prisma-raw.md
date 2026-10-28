@@ -47,4 +47,4 @@ not included in this rule's shipped method list.
 
 - [Implementation](../src/rules/list/no-unsafe-prisma-raw.ts)
 - [Unit tests](../src/tests/unit/rules/no-unsafe-prisma-raw.spec.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

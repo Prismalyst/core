@@ -50,4 +50,4 @@ See [`warn-cascade-delete`](warn-cascade-delete.md) for deletions that may affec
 
 - [Implementation](../src/rules/list/require-where-delete-many.ts)
 - [Unit tests](../src/tests/unit/rules/require-where-delete-many.spec.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

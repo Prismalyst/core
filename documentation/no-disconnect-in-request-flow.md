@@ -79,4 +79,4 @@ Using a broad substring such as `src` would exempt every matching file.
 
 - [Implementation](../src/rules/list/no-disconnect-in-request-flow.ts)
 - [Unit tests](../src/tests/unit/rules/no-disconnect-in-request-flow.spec.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

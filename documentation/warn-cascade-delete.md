@@ -72,4 +72,4 @@ Use [`require-where-delete-many`](require-where-delete-many.md) to also guard ag
 
 - [Implementation](../src/rules/list/warn-cascade-delete.ts)
 - [Unit tests](../src/tests/unit/rules/warn-cascade-delete.spec.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

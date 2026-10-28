@@ -47,4 +47,4 @@ rejects those methods regardless of how their arguments are built.
 
 - [Implementation](../src/rules/list/no-dynamic-raw-query.ts)
 - [Unit tests](../src/tests/unit/rules/no-dynamic-raw-query.spec.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

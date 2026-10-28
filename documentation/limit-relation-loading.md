@@ -5,7 +5,7 @@ limit bounds parent records, but does not bound how many related records are loa
 
 ## Rule details
 
-- **Methods:** [CRUD methods](README.md#core-behavior).
+- **Methods:** [CRUD methods](../README.md#core-behavior).
 - **Requires schema:** Yes.
 - **Options:** None.
 
@@ -90,4 +90,4 @@ produces no report.
 
 - [Implementation](../src/rules/list/limit-relation-loading.ts)
 - [Unit tests](../src/tests/unit/rules/limit-relation-loading.spec.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

@@ -5,7 +5,7 @@ tie-breaker makes the ordering of records with otherwise equal sort values predi
 
 ## Rule details
 
-- **Methods:** [Read methods](README.md#core-behavior).
+- **Methods:** [Read methods](../README.md#core-behavior).
 - **Requires schema:** Yes.
 - **Options:** None.
 
@@ -82,4 +82,4 @@ for page size checks and [`no-deep-offset-pagination`](no-deep-offset-pagination
 
 - [Implementation](../src/rules/list/unstable-pagination.ts)
 - [Unit tests](../src/tests/unit/rules/unstable-pagination.spec.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

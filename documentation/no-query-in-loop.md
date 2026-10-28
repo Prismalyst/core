@@ -5,7 +5,7 @@ pattern; use a bulk operation or fetch the needed records together where possibl
 
 ## Rule details
 
-- **Methods:** [All registered Prisma methods](README.md#core-behavior).
+- **Methods:** [All registered Prisma methods](../README.md#core-behavior).
 - **Requires schema:** No.
 - **Options:** None.
 
@@ -56,4 +56,4 @@ per-item queries concurrently with `Promise.all` still produces a report for a r
 - [Unit tests](../src/tests/unit/rules/no-query-in-loop.spec.ts)
 - [Loop detection](../src/ast/utils/create-node-utils.ts)
 - [Scope tests](../src/tests/ast/v7/scope.spec.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

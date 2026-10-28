@@ -64,4 +64,4 @@ Unknown or nonnumeric `skip` values are ignored. A cursor does not exempt a quer
 
 - [Implementation](../src/rules/list/no-deep-offset-pagination.ts)
 - [Unit tests](../src/tests/unit/rules/no-deep-offset-pagination.spec.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)

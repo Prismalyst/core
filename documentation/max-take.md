@@ -58,4 +58,4 @@ an equivalent backward page limit. It does not limit nested relations; use
 
 - [Implementation](../src/rules/list/max-take.ts)
 - [Unit tests](../src/tests/unit/rules/max-take.spec.ts)
-- [All rules](README.md)
+- [All rules](../README.md#rules)
