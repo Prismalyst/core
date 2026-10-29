@@ -45,7 +45,6 @@
     "@eslint/js": "^10.0.1",
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
-    "@prisma/dmmf": "^7.10.1",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/node": "^26.6.6",
     "eslint": "^10.13.0",
