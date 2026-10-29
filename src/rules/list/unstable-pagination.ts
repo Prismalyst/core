@@ -15,8 +15,10 @@ export function unstablePagination(
   expression: Pick<PrismaExpression, 'method' | 'args' | 'prismaContext'>,
   rule: RuleWithoutFunction,
   _options: RuleOptions<Record<PropertyKey, never>>,
-  dmmf: DMMFType,
+  dmmf?: DMMFType,
 ): RuleReturnType {
+  if (!dmmf) return { isTriggered: false };
+
   const isRuleMethod = rule.methods.includes(expression.method);
 
   if (!isRuleMethod) return { isTriggered: false };
